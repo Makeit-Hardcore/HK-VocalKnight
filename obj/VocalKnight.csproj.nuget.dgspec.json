@@ -1,0 +1,49 @@
+{
+  "format": 1,
+  "restore": {
+    "D:\\Documents\\CodeEnv\\VocalKnight\\VocalKnight.csproj": {}
+  },
+  "projects": {
+    "D:\\Documents\\CodeEnv\\VocalKnight\\VocalKnight.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "D:\\Documents\\CodeEnv\\VocalKnight\\VocalKnight.csproj",
+        "projectName": "VocalKnight",
+        "projectPath": "D:\\Documents\\CodeEnv\\VocalKnight\\VocalKnight.csproj",
+        "packagesPath": "C:\\Users\\Will\\.nuget\\packages\\",
+        "outputPath": "D:\\Documents\\CodeEnv\\VocalKnight\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\Will\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net472"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "E:\\Hollow Knight 1.5 Modded\\hollow_knight_Data\\Managed\\Mods": {},
+          "E:\\Hollow Knight 1.5 Modded\\hollow_knight_Data\\Managed\\Mods\\Satchel": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net472": {
+            "targetAlias": "net472",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net472": {
+          "targetAlias": "net472",
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\6.0.300\\RuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}
