@@ -9,10 +9,9 @@ namespace VocalKnight
 {
     public class VocalKnight : Mod
     {
-        //Keyword recognition looks more for clear commands rather than accidental slips of the tongue
-        //Try Dictation recognition instead: convert speech to text, then scan text for keywords
-        private KeywordRecognizer kwRecognizer;
+        private DictationRecognizer dictRecognizer;
         private Dictionary<string, Action> keywords = new Dictionary<string, Action>();
+        private List<string> guessedKeys = new List<string>();
 
         private static VocalKnight? _instance;
 
@@ -47,23 +46,96 @@ namespace VocalKnight
             keywords.Add("night", () => { Commands.Enemies.SpawnPureVessel(); });
             keywords.Add("shade", () => { Commands.Enemies.SpawnShade(); });
             keywords.Add("fly", () => { Commands.Enemies.SpawnEnemy("buzzer"); });
-            kwRecognizer = new KeywordRecognizer(keywords.Keys.ToArray());
-            kwRecognizer.OnPhraseRecognized += ExecuteAction;
-            ModHooks.SavegameLoadHook += LaunchRecognizer;
+            //ModHooks.SavegameLoadHook += LaunchRecognizer;
+            //TEMPORARY NEW GAME HOOK FOR TESTING
+            ModHooks.NewGameHook += LaunchRecognizer;
             Log("Initialized");
         }
 
         public override List<(string, string)> GetPreloadNames() => ObjectLoader.ObjectList.Values.ToList();
 
-        public void LaunchRecognizer(int id)
+        public void LaunchRecognizer()
         {
-            kwRecognizer.Start();
+            dictRecognizer = new DictationRecognizer();
+            dictRecognizer.DictationHypothesis += Hypothesis;
+            dictRecognizer.DictationResult += Result;
+            dictRecognizer.DictationComplete += Completion;
+            dictRecognizer.DictationError += Error;
+            dictRecognizer.Start();
         }
 
-        private void ExecuteAction(PhraseRecognizedEventArgs args)
+        public void KillRecognizer()
+        {
+            if (dictRecognizer != null)
+            {
+                dictRecognizer.DictationHypothesis -= Hypothesis;
+                dictRecognizer.DictationResult -= Result;
+                dictRecognizer.DictationComplete -= Completion;
+                dictRecognizer.DictationError -= Error;
+                if (dictRecognizer.Status == SpeechSystemStatus.Running)
+                {
+                    dictRecognizer.Stop();
+                }
+                dictRecognizer.Dispose();
+            }
+        }
+
+        public void Hypothesis(string text)
+        {
+            foreach (string key in keywords.Keys)
+            {
+                if (text.Contains(key))
+                {
+                    ExecuteAction(key);
+                    guessedKeys.Add(key);
+                }
+            }
+        }
+
+        public void Result(string text, ConfidenceLevel confidence)
+        {
+            foreach (string key in keywords.Keys)
+            {
+                if (text.Contains(key) && !guessedKeys.Contains(key))
+                {
+                    ExecuteAction(key);
+                }
+            }
+            guessedKeys.Clear();
+        }
+
+        public void Completion(DictationCompletionCause cause)
+        {
+            switch (cause)
+            {
+                case DictationCompletionCause.TimeoutExceeded:
+                case DictationCompletionCause.PauseLimitExceeded:
+                case DictationCompletionCause.Canceled:
+                case DictationCompletionCause.Complete:
+                    // Restart required
+                    KillRecognizer();
+                    LaunchRecognizer();
+                    break;
+                case DictationCompletionCause.UnknownError:
+                case DictationCompletionCause.AudioQualityFailure:
+                case DictationCompletionCause.MicrophoneUnavailable:
+                case DictationCompletionCause.NetworkFailure:
+                    // Error
+                    Log("Error killed Dictation Recognizer");
+                    KillRecognizer();
+                    break;
+            }
+        }
+
+        public void Error(string error, int hresult)
+        {
+            Log("Dictation Error: " + error);
+        }
+
+        private void ExecuteAction(string key)
         {
             Action kwAction;
-            if (keywords.TryGetValue(args.text, out kwAction))
+            if (keywords.TryGetValue(key, out kwAction))
             {
                 kwAction.Invoke();
             }
