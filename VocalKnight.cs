@@ -4,6 +4,7 @@ using UnityEngine;
 using UObject = UnityEngine.Object;
 using UnityEngine.Windows.Speech;
 using System.Collections;
+using System.Collections.Specialized;
 using System.Collections.Generic;
 using System.Linq;
 using VocalKnight.Commands;
@@ -15,9 +16,7 @@ namespace VocalKnight
 {
     public class VocalKnight : Mod
     {
-        private DictationRecognizer dictRecognizer;
-        private Dictionary<string, Action> keywords = new Dictionary<string, Action>();
-        private List<string> guessedKeys = new List<string>();
+        private RecognizerUtil recognizer;
         private MonoBehaviour _coroutineRunner;
         public Dictionary<string, int> Cooldowns = new();
         internal CommandProcessor Processor { get; private set; }
@@ -36,12 +35,14 @@ namespace VocalKnight
             }
         }
 
-        public override string GetVersion() => GetType().Assembly.GetName().Version.ToString();
+        public override string GetVersion() => "v0.5.0";
 
         public VocalKnight() : base()
         {
             _instance = this;
         }
+
+        public override List<(string, string)> GetPreloadNames() => ObjectLoader.ObjectList.Values.ToList();
 
         public override void Initialize(Dictionary<string, Dictionary<string, GameObject>> preloadedObjects)
         {
@@ -57,15 +58,9 @@ namespace VocalKnight
             Processor.RegisterCommands<Commands.Camera>();
             Processor.RegisterCommands<Game>();
 
-            var go = new GameObject();
-            UObject.DontDestroyOnLoad(go);
-            _coroutineRunner = go.AddComponent<NonBouncer>();
-
-            System.Random rand = new System.Random();
-
             ConfigureCooldowns();
 
-            keywords.Add("reset reset reset", () => { CoroutineUtil.cancel = true; });
+            /*keywords.Add("reset reset reset", () => { CoroutineUtil.cancel = true; });
 
             keywords.Add("zap", () => { _coroutineRunner.StartCoroutine(Enemies.StartZapping()); });
             keywords.Add("shock", () => { _coroutineRunner.StartCoroutine(Enemies.StartZapping()); });
@@ -194,122 +189,47 @@ namespace VocalKnight
             keywords.Add("point", () => { _coroutineRunner.StartCoroutine(Area.SpikeFloor()); });
             keywords.Add("orb", () => { _coroutineRunner.StartCoroutine(Area.SpawnAbsOrb()); });
             keywords.Add("sphere", () => { _coroutineRunner.StartCoroutine(Area.SpawnAbsOrb()); });
+            */
 
-            //ModHooks.SavegameLoadHook += LaunchRecognizer;
-            //TEMPORARY NEW GAME HOOK FOR TESTING
-            ModHooks.NewGameHook += LaunchRecognizer;
-            ModHooks.SavegameLoadHook += LaunchRecognizer;
-            On.QuitToMenu.Start += KillRec_Standin;
+            ModHooks.NewGameHook += NewRecognizer;
+            ModHooks.SavegameLoadHook += NewRecognizer;
+            On.QuitToMenu.Start += DeleteRecognizer;
+            RecognizerUtil.foundCommands.CollectionChanged += ExecuteCommands;
 
             Log("Initialized");
         }
 
-        public override List<(string, string)> GetPreloadNames() => ObjectLoader.ObjectList.Values.ToList();
-
-        public void LaunchRecognizer(int id)
+        public void NewRecognizer(int id)
         {
-            dictRecognizer = new DictationRecognizer();
-            dictRecognizer.DictationHypothesis += Hypothesis;
-            dictRecognizer.DictationResult += Result;
-            dictRecognizer.DictationComplete += Completion;
-            dictRecognizer.DictationError += Error;
-            dictRecognizer.Start();
+            recognizer = new RecognizerUtil();
+            recognizer.StartRecognizer();
         }
 
-        public void LaunchRecognizer()
+        public void NewRecognizer()
         {
-            dictRecognizer = new DictationRecognizer();
-            dictRecognizer.DictationHypothesis += Hypothesis;
-            dictRecognizer.DictationResult += Result;
-            dictRecognizer.DictationComplete += Completion;
-            dictRecognizer.DictationError += Error;
-            dictRecognizer.Start();
+            recognizer = new RecognizerUtil();
+            recognizer.StartRecognizer();
         }
 
-        protected IEnumerator KillRec_Standin(On.QuitToMenu.orig_Start orig, QuitToMenu self)
+        protected IEnumerator DeleteRecognizer(On.QuitToMenu.orig_Start orig, QuitToMenu self)
         {
-            Log("Returning to Menu, killing Recognizer");
-            KillRecognizer();
-            _coroutineRunner.StopAllCoroutines();
+            Logger.Log("Returning to Menu, deleting Recognizer");
+            recognizer.KillRecognizer();
+            recognizer = null;
+
             yield return null;
             orig(self);
         }
 
-        public void KillRecognizer()
+        private void ExecuteCommands(object sender, NotifyCollectionChangedEventArgs args)
         {
-            if (dictRecognizer != null)
+            if (args.NewItems != null)
             {
-                if (dictRecognizer.Status == SpeechSystemStatus.Running)
+                foreach (string command in args.NewItems)
                 {
-                    dictRecognizer.Stop();
+                    Logger.Log("Executing command: " + command);
+                    //Processor.Execute(command, null);
                 }
-                dictRecognizer.DictationHypothesis -= Hypothesis;
-                dictRecognizer.DictationResult -= Result;
-                dictRecognizer.DictationComplete -= Completion;
-                dictRecognizer.DictationError -= Error;
-                dictRecognizer.Dispose();
-                dictRecognizer = null;
-            }
-        }
-
-        public void Hypothesis(string text)
-        {
-            foreach (string key in keywords.Keys)
-            {
-                if (text.Contains(key))
-                {
-                    ExecuteAction(key);
-                    guessedKeys.Add(key);
-                }
-            }
-        }
-
-        public void Result(string text, ConfidenceLevel confidence)
-        {
-            foreach (string key in keywords.Keys)
-            {
-                if (text.Contains(key) && !guessedKeys.Contains(key))
-                {
-                    ExecuteAction(key);
-                }
-            }
-            guessedKeys.Clear();
-        }
-
-        public void Completion(DictationCompletionCause cause)
-        {
-            switch (cause)
-            {
-                case DictationCompletionCause.TimeoutExceeded:
-                case DictationCompletionCause.PauseLimitExceeded:
-                case DictationCompletionCause.Canceled:
-                case DictationCompletionCause.Complete:
-                    // Restart required
-                    KillRecognizer();
-                    LaunchRecognizer();
-                    break;
-                case DictationCompletionCause.UnknownError:
-                case DictationCompletionCause.AudioQualityFailure:
-                case DictationCompletionCause.MicrophoneUnavailable:
-                case DictationCompletionCause.NetworkFailure:
-                    // Error
-                    Logger.LogError("Error killed Dictation Recognizer");
-                    KillRecognizer();
-                    break;
-            }
-        }
-
-        public void Error(string error, int hresult)
-        {
-            Log("Dictation Error: " + error);
-        }
-
-        private void ExecuteAction(string key)
-        {
-            Action kwAction;
-            if (keywords.TryGetValue(key, out kwAction))
-            {
-                kwAction.Invoke();
             }
         }
 
