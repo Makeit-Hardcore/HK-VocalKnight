@@ -17,7 +17,7 @@ namespace VocalKnight.Utils
             
             ModHooks.GetPlayerBoolHook += GetBool;
 
-            yield return new WaitForSeconds(time);
+            yield return CoroutineUtil.WaitWithCancel(time);
             
             ModHooks.GetPlayerBoolHook -= GetBool;
         }

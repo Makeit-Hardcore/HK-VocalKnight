@@ -51,6 +51,10 @@
       <None Remove="README.md" />
     </ItemGroup>
 
+	<ItemGroup>
+		<EmbeddedResource Include="shaders" />
+	</ItemGroup>
+	
     <ItemGroup>
         <Reference Include="Assembly-CSharp">
             <HintPath>$(HollowKnightRefs)/Assembly-CSharp.dll</HintPath>

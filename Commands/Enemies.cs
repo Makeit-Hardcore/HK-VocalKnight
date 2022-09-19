@@ -1,14 +1,20 @@
 ﻿using System.Linq;
+using System.Collections;
 using VocalKnight.Components;
 using VocalKnight.Extensions;
+using VocalKnight.Precondition;
+using VocalKnight.Utils;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using USceneManager = UnityEngine.SceneManagement.SceneManager;
 using Vasi;
 
 namespace VocalKnight.Commands
 {
     public class Enemies
     {
+        [Cooldown(1)]
         public static void SpawnEnemy(string name)
         {
             Logger.Log($"Trying to spawn enemy {name}");
@@ -17,19 +23,21 @@ namespace VocalKnight.Commands
                 Logger.LogError("Could not get GameObject " + name);
                 return;
             }
-            GameObject enemy = Object.Instantiate(go, HeroController.instance.gameObject.transform.position, Quaternion.identity);
+            Vector3 position = HeroController.instance.gameObject.transform.position;
+            position.y += 5;
+            GameObject enemy = Object.Instantiate(go, position, Quaternion.identity);
             enemy.SetActive(true);
         }
 
-        //BUG
-        public static void Jars()
+        [Cooldown(2)]
+        public static IEnumerator Jars()
         {
             const string path = "_GameCameras/CameraParent/tk2dCamera/SceneParticlesController/town_particle_set/Particle System";
             string[] enemies = {"roller", "aspid", "buzzer"};
-            //AudioClip shatter_clip = Game.Clips.First(x => x.name == "globe_break_larger");
+            AudioClip shatter_clip = Game.Clips.First(x => x.name == "globe_break_larger");
             Vector3 pos = HeroController.instance.transform.position;
             GameObject break_jar = ObjectLoader.InstantiableObjects["prefab_jar"];
-            for (int i = -2; i <= 2; i++)
+            for (int i = -1; i <= 1; i++)
             {
                 // Spawn the jar
                 GameObject go = Object.Instantiate
@@ -45,17 +53,19 @@ namespace VocalKnight.Commands
                 go.AddComponent<AudioSource>();
                 var ctrl = go.AddComponent<BetterSpawnJarControl>();
                 var ps = GameObject.Find(path).GetComponent<ParticleSystem>();
-                //ctrl.Clip = shatter_clip;
+                ctrl.Clip = shatter_clip;
                 ctrl.ParticleBreak = break_jar.GetChild("Pt Glass L").GetComponent<ParticleSystem>();
                 ctrl.ParticleBreakSouth = break_jar.GetChild("Pt Glass S").GetComponent<ParticleSystem>();
                 ctrl.ReadyDust = ctrl.Trail = ps;
+                ctrl.StrikeNailReaction = new GameObject();
                 ctrl.EnemyPrefab = ObjectLoader.InstantiableObjects[enemies[Random.Range(0, enemies.Length)]];
                 ctrl.EnemyHP = 10;
+                yield return new WaitForSeconds(0.1f);
                 go.SetActive(true);
             }
         }
 
-        //BUG? Check for roar (is it supposed to roar in HollowTwitch?)
+        [Cooldown(5)]        
         public static void SpawnPureVessel()
         {
             // stolen from https://github.com/SalehAce1/PathOfPureVessel
@@ -111,7 +121,8 @@ namespace VocalKnight.Commands
         }
 
         //BUG: Revek spawns, but doesn't attack; issue with collider
-        public static void Revek()
+        [Cooldown(30)]
+        public static IEnumerator Revek()
         {
             GameObject revek = Object.Instantiate
             (
@@ -119,15 +130,18 @@ namespace VocalKnight.Commands
                 HeroController.instance.gameObject.transform.position,
                 Quaternion.identity
             );
+            yield return new WaitForSecondsRealtime(1);
             Object.DontDestroyOnLoad(revek);
             revek.SetActive(true);
             PlayMakerFSM ctrl = revek.LocateMyFSM("Control");
+            // Make sure init gets to run.
+            yield return null;
             // Actually spawn.
             ctrl.SetState("Appear Pause");
             // ReSharper disable once ImplicitlyCapturedClosure (ctrl)
             ctrl.GetState("Hit").AddMethod(() => Object.Destroy(revek));
             // ReSharper disable once ImplicitlyCapturedClosure (ctrl)
-            /*void OnUnload()
+            void OnUnload()
             {
                 if (revek == null)
                     return;
@@ -149,27 +163,27 @@ namespace VocalKnight.Commands
             }
             GameManager.instance.UnloadingLevel += OnUnload;
             USceneManager.activeSceneChanged += OnLoad;
-            yield return new WaitForSecondsRealtime(30);
+            yield return CoroutineUtil.WaitWithCancel(30);
             Object.Destroy(revek);
             GameManager.instance.UnloadingLevel -= OnUnload;
             USceneManager.activeSceneChanged -= OnLoad;
-            */
         }
 
+        [Cooldown(5)]
         public static void SpawnShade()
         {
             Object.Instantiate(GameManager.instance.sm.hollowShadeObject, HeroController.instance.transform.position, Quaternion.identity);
         }
 
-        //BUG: All zaps immediately spawn on top of one another
-        public static void StartZapping()
+        [Cooldown(10)]
+        public static IEnumerator StartZapping()
         {
             GameObject prefab = ObjectLoader.InstantiableObjects["zap"];
             for (int i = 0; i < 12; i++)
             {
                 GameObject zap = Object.Instantiate(prefab, HeroController.instance.transform.position, Quaternion.identity);
                 zap.SetActive(true);
-                new WaitForSeconds(0.5f);
+                yield return new WaitForSeconds(0.5f);
             }
         }
         

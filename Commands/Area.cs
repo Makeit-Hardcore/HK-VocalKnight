@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using VocalKnight.Entities.Attributes;
 using VocalKnight.Precondition;
+using VocalKnight.Utils;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 using Vasi;
@@ -12,19 +13,22 @@ namespace VocalKnight.Commands
     public class Area
     {
         [HKCommand("bees")]
-        [Cooldown(120)]
+        [Cooldown(100)]
         [Summary("Hive knight bees.")]
-        public void Bees()
+        public static IEnumerator Bees()
         {
-            Vector3 pos = HeroController.instance.transform.position;
-            
-            RaycastHit2D floorHit = Physics2D.Raycast(pos, Vector2.down, 500, 1 << 8);
+            Vector3 pos;
+            RaycastHit2D floorHit;
 
-            if (floorHit && floorHit.point.y < pos.y)
-                pos = floorHit.point;
-
-            for (int i = 0; i < 7; i++)
+            for (int i = 0; i < 25; i++)
             {
+                pos = HeroController.instance.transform.position;
+                floorHit = Physics2D.Raycast(pos, Vector2.down, 500, 1 << 8);
+                if (floorHit && floorHit.point.y < pos.y)
+                    pos = floorHit.point;
+                if (HeroController.instance.cState.facingRight) pos.x += 10;
+                else pos.x -= 10;
+
                 GameObject bee = Object.Instantiate
                 (
                     ObjectLoader.InstantiableObjects["bee"],
@@ -45,17 +49,18 @@ namespace VocalKnight.Commands
                 ctrl.GetAction<FloatCompare>("Swarm", 3).float2.Value = pos.y - 5f;
                 
                 // Recycle after going oob
-                ctrl.ChangeTransition("Reset", "FINISHED", "Pause");
+                //ctrl.ChangeTransition("Reset", "FINISHED", "Pause");
                 
                 // Start the swarming
                 ctrl.SendEvent("SWARM");
+                yield return CoroutineUtil.WaitWithCancel(0.2f);
             }
         }
 
         [HKCommand("lasers")]
-        [Cooldown(60)]
+        [Cooldown(5)]
         [Summary("Summons crystal peak lasers.")]
-        public void Lasers()
+        public static void Lasers()
         {
             Vector3 pos = HeroController.instance.transform.position;
 
@@ -103,7 +108,8 @@ namespace VocalKnight.Commands
 
         [HKCommand("spikefloor")]
         [Summary("Spawns nkg spikes.")]
-        public IEnumerator SpikeFloor()
+        [Cooldown(1)]
+        public static IEnumerator SpikeFloor()
         {
             Vector3 hero_pos = HeroController.instance.transform.position;
 
@@ -169,9 +175,9 @@ namespace VocalKnight.Commands
         }
 
         [HKCommand("orb")]
-        [Cooldown(2)]
+        [Cooldown(1)]
         [Summary("Spawns an abs orb.")]
-        public IEnumerator SpawnAbsOrb()
+        public static IEnumerator SpawnAbsOrb()
         {
             if (HeroController.instance == null)
                 yield break;

@@ -20,7 +20,7 @@ namespace VocalKnight.Commands
     public class Player
     {
         // Most (all) of the commands stolen from Chaos Mod by Seanpr
-        private GameObject _maggot;
+        private static GameObject _maggot;
 
         public Player()
         {
@@ -53,8 +53,8 @@ namespace VocalKnight.Commands
 
         [HKCommand("ax2uBlind")]
         [Summary("Makes all rooms dark like lanternless rooms for a time.")]
-        [Cooldown(60)]
-        public IEnumerator Blind()
+        [Cooldown(15)]
+        public static IEnumerator Blind()
         {
             void OnSceneLoad(On.GameManager.orig_EnterHero orig, GameManager self, bool additiveGateSearch)
             {
@@ -66,7 +66,7 @@ namespace VocalKnight.Commands
             DarknessHelper.Darken();
             On.GameManager.EnterHero += OnSceneLoad;
 
-            yield return new WaitForSecondsRealtime(30);
+            yield return CoroutineUtil.WaitWithCancel(15f);
 
             On.GameManager.EnterHero -= OnSceneLoad;
             DarknessHelper.Lighten();
@@ -74,22 +74,22 @@ namespace VocalKnight.Commands
 
         [HKCommand("nopogo")]
         [Summary("Disables pogo knockback temporarily.")]
-        [Cooldown(60)]
-        public IEnumerator PogoKnockback()
+        [Cooldown(15)]
+        public static IEnumerator PogoKnockback()
         {
             void NoBounce(On.HeroController.orig_Bounce orig, HeroController self) { }
 
             On.HeroController.Bounce += NoBounce;
 
-            yield return new WaitForSecondsRealtime(30);
+            yield return CoroutineUtil.WaitWithCancel(15f);
 
             On.HeroController.Bounce -= NoBounce;
         }
 
         [HKCommand("conveyor")]
         [Summary("Floors or walls will act like conveyors")]
-        [Cooldown(60)]
-        public IEnumerator Conveyor()
+        [Cooldown(15)]
+        public static IEnumerator Conveyor()
         {
             bool vert = Random.Range(0, 2) == 0;
 
@@ -108,7 +108,7 @@ namespace VocalKnight.Commands
                 hc.SetConveyorSpeed(speed);
             }
 
-            yield return new WaitForSecondsRealtime(30);
+            yield return CoroutineUtil.WaitWithCancel(15f);
 
             if (vert)
                 hc.cState.onConveyorV = false;
@@ -120,8 +120,8 @@ namespace VocalKnight.Commands
 
         [HKCommand("jumplength")]
         [Summary("Gives a random jump length.")]
-        [Cooldown(60)]
-        public IEnumerator JumpLength()
+        [Cooldown(15)]
+        public static IEnumerator JumpLength()
         {
             HeroController hc = HeroController.instance;
 
@@ -129,52 +129,14 @@ namespace VocalKnight.Commands
 
             hc.JUMP_STEPS = Random.Range(hc.JUMP_STEPS / 2, hc.JUMP_STEPS * 8);
 
-            yield return new WaitForSecondsRealtime(30);
+            yield return CoroutineUtil.WaitWithCancel(15f);
 
             hc.JUMP_STEPS = prev_steps;
         }
 
-        [HKCommand("lifeblood")]
-        [Cooldown(40)]
-        public IEnumerator Lifeblood()
-        {
-            int r = Random.Range(1, 10);
-
-            for (int i = 0; i < r; i++)
-            {
-                yield return null;
-
-                EventRegister.SendEvent("ADD BLUE HEALTH");
-
-                yield return null;
-            }
-        }
-
-        [HKCommand("godmode")]
-        [Cooldown(60)]
-        public IEnumerator Godmode()
-        {
-            static int TakeHealth(int damage) => 0;
-
-            static HitInstance HitInstance(Fsm owner, HitInstance hit)
-            {
-                hit.DamageDealt = 1 << 8;
-
-                return hit;
-            }
-
-            ModHooks.TakeHealthHook += TakeHealth;
-            ModHooks.HitInstanceHook += HitInstance;
-
-            yield return new WaitForSeconds(15f);
-
-            ModHooks.TakeHealthHook -= TakeHealth;
-            ModHooks.HitInstanceHook -= HitInstance;
-        }
-
         [HKCommand("sleep")]
-        [Cooldown(60)]
-        public IEnumerator Sleep()
+        [Cooldown(10)]
+        public static IEnumerator Sleep()
         {
             const string SLEEP_CLIP = "Wake Up Ground";
 
@@ -187,23 +149,23 @@ namespace VocalKnight.Commands
             hc.StopAnimationControl();
             hc.RelinquishControl();
 
-            yield return new WaitForSeconds(anim.GetClipDuration(SLEEP_CLIP));
+            yield return CoroutineUtil.WaitWithCancel(anim.GetClipDuration(SLEEP_CLIP));
 
             hc.StartAnimationControl();
             hc.RegainControl();
         }
 
         [HKCommand("limitSoul")]
-        [Cooldown(60)]
-        public IEnumerator LimitSoul()
+        [Cooldown(15)]
+        public static IEnumerator LimitSoul()
         {
-            yield return PlayerDataUtil.FakeSet(nameof(PlayerData.soulLimited), false, 30);
+            yield return PlayerDataUtil.FakeSet(nameof(PlayerData.soulLimited), false, 15);
         }
 
         [HKCommand("jumpspeed")]
         [Summary("Gives a random jump speed.")]
-        [Cooldown(60)]
-        public IEnumerator JumpSpeed()
+        [Cooldown(15)]
+        public static IEnumerator JumpSpeed()
         {
             HeroController hc = HeroController.instance;
 
@@ -211,15 +173,15 @@ namespace VocalKnight.Commands
 
             hc.JUMP_SPEED = Random.Range(hc.JUMP_SPEED / 4f, hc.JUMP_SPEED * 4f);
 
-            yield return new WaitForSecondsRealtime(30);
+            yield return CoroutineUtil.WaitWithCancel(15f);
 
             hc.JUMP_SPEED = prev_speed;
         }
 
         [HKCommand("wind")]
         [Summary("Make it a windy day.")]
-        [Cooldown(180)]
-        public IEnumerator Wind()
+        [Cooldown(15)]
+        public static IEnumerator Wind()
         {
             float speed = Random.Range(-6f, 6f);
 
@@ -239,8 +201,8 @@ namespace VocalKnight.Commands
             // Prevent wind from pushing you OOB on respawn.
             ModHooks.BeforePlayerDeadHook += BeforePlayerDead;
 
-            yield return new WaitForSecondsRealtime(30);
-            
+            yield return CoroutineUtil.WaitWithCancel(15f);
+
             ModHooks.BeforePlayerDeadHook -= BeforePlayerDead;
 
             HeroController.instance.cState.inConveyorZone = false;
@@ -249,8 +211,8 @@ namespace VocalKnight.Commands
 
         [HKCommand("dashSpeed")]
         [Summary("Change dash speed.")]
-        [Cooldown(60)]
-        public IEnumerator DashSpeed()
+        [Cooldown(15)]
+        public static IEnumerator DashSpeed()
         {
             HeroController hc = HeroController.instance;
 
@@ -259,15 +221,15 @@ namespace VocalKnight.Commands
 
             hc.DASH_SPEED = len;
 
-            yield return new WaitForSecondsRealtime(30);
+            yield return CoroutineUtil.WaitWithCancel(15f);
 
             hc.DASH_SPEED = orig_dash;
         }
 
         [HKCommand("dashLength")]
         [Summary("Changes dash length.")]
-        [Cooldown(60)]
-        public IEnumerator DashLength()
+        [Cooldown(15)]
+        public static IEnumerator DashLength()
         {
             HeroController hc = HeroController.instance;
 
@@ -276,15 +238,15 @@ namespace VocalKnight.Commands
 
             hc.DASH_TIME = len;
 
-            yield return new WaitForSecondsRealtime(30);
+            yield return CoroutineUtil.WaitWithCancel(15f);
 
             hc.DASH_TIME = orig_dash;
         }
 
         [HKCommand("dashVector")]
         [Summary("Changes dash vector. New vector generated when dashing in a new direction.")]
-        [Cooldown(60)]
-        public IEnumerator DashVector()
+        [Cooldown(15)]
+        public static IEnumerator DashVector()
         {
             Vector2? vec = null;
             Vector2? orig = null;
@@ -311,61 +273,22 @@ namespace VocalKnight.Commands
 
             ModHooks.DashVectorHook += VectorHook;
 
-            yield return new WaitForSecondsRealtime(30f);
+            yield return CoroutineUtil.WaitWithCancel(15f);
 
             ModHooks.DashVectorHook -= VectorHook;
         }
 
-        [HKCommand("triplejump")]
-        [Summary("Gives you triple jump. Wings is enabled for the duration of this command.")]
-        public IEnumerator TripleJump()
-        {
-            bool triple_jump = false;
-
-            void Triple(On.HeroController.orig_DoDoubleJump orig, HeroController self)
-            {
-                orig(self);
-
-                if (!triple_jump)
-                {
-                    Mirror.SetField(self, "doubleJumped", false);
-
-                    triple_jump = true;
-                }
-                else
-                {
-                    triple_jump = false;
-                }
-            }
-            
-            On.HeroController.DoDoubleJump += Triple;
-
-            yield return PlayerDataUtil.FakeSet(nameof(PlayerData.hasDoubleJump), true, 30);
-                                                        
-            On.HeroController.DoDoubleJump -= Triple;
-        }
-
-        [HKCommand("overflow")]
-        [Cooldown(40)]
-        [Summary("Gain more soul than you're able to carry, allowing you to cast 6 spells with base vessels.")]
-        public void OverflowSoul()
-        {
-            HeroController.instance.AddMPChargeSpa(99 * 2);
-
-            PlayerData.instance.MPCharge += 99;
-        }
-
         [HKCommand("timescale")]
         [Summary("Changes the timescale of the game for the time specified. Limit: [0.01, 2f]")]
-        [Cooldown(60 * 2)]
+        [Cooldown(15)]
         [SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
-        public IEnumerator ChangeTimescale([EnsureFloat(0.01f, 2f)] float scale)
+        public static IEnumerator ChangeTimescale([EnsureFloat(0.01f, 2f)] float scale)
         {
             SanicHelper.TimeScale = scale;
 
             Time.timeScale = Time.timeScale == 0 ? 0 : scale;
 
-            yield return new WaitForSecondsRealtime(60);
+            yield return CoroutineUtil.WaitWithCancel(15f);
 
             Time.timeScale = Time.timeScale == 0 ? 0 : 1;
 
@@ -374,8 +297,8 @@ namespace VocalKnight.Commands
 
         [HKCommand("gravity")]
         [Summary("Changes the gravity to the specified scale. Scale Limit: [0.2, 1.9]")]
-        [Cooldown(60 * 2)]
-        public IEnumerator ChangeGravity([EnsureFloat(0.2f, 1.90f)] float scale)
+        [Cooldown(15)]
+        public static IEnumerator ChangeGravity([EnsureFloat(0.2f, 1.90f)] float scale)
         {
             var rigidBody = HeroController.instance.gameObject.GetComponent<Rigidbody2D>();
 
@@ -383,7 +306,7 @@ namespace VocalKnight.Commands
 
             rigidBody.gravityScale = scale;
 
-            yield return new WaitForSecondsRealtime(30);
+            yield return CoroutineUtil.WaitWithCancel(15f);
 
             rigidBody.gravityScale = def;
         }
@@ -391,8 +314,8 @@ namespace VocalKnight.Commands
 
         [HKCommand("invertcontrols")]
         [Summary("Inverts the move direction of the player.")]
-        [Cooldown(60)]
-        public IEnumerator InvertControls()
+        [Cooldown(15)]
+        public static IEnumerator InvertControls()
         {
             void Invert(On.HeroController.orig_Move orig, HeroController self, float dir)
             {
@@ -413,16 +336,17 @@ namespace VocalKnight.Commands
 
             On.HeroController.Move += Invert;
             ModHooks.DashVectorHook += InvertDash;
-            
-            yield return new WaitForSecondsRealtime(60);
-            
+
+            yield return CoroutineUtil.WaitWithCancel(15f);
+
             On.HeroController.Move -= Invert;
             ModHooks.DashVectorHook -= InvertDash;
         }
 
         [HKCommand("slippery")]
-        [Summary("Makes the floor have no friction at all. Lasts for 60 seconds.")]
-        public IEnumerator Slippery()
+        [Summary("Makes the floor have no friction at all. Lasts for 20 seconds.")]
+        [Cooldown(15)]
+        public static IEnumerator Slippery()
         {
             float last_move_dir = 0;
 
@@ -448,14 +372,15 @@ namespace VocalKnight.Commands
             
             On.HeroController.Move += Slip;
 
-            yield return new WaitForSecondsRealtime(60);
-            
+            yield return CoroutineUtil.WaitWithCancel(15f);
+
             On.HeroController.Move -= Slip;
         }
 
         [HKCommand("nailscale")]
         [Summary("Makes the nail huge or tiny. Scale limit: [.3, 5]")]
-        public IEnumerator NailScale([EnsureFloat(.3f, 5f)] float nailScale)
+        [Cooldown(15)]
+        public static IEnumerator NailScale([EnsureFloat(.3f, 5f)] float nailScale)
         {
             void ChangeNailScale(On.NailSlash.orig_StartSlash orig, NailSlash self)
             {
@@ -466,15 +391,15 @@ namespace VocalKnight.Commands
 
             On.NailSlash.StartSlash += ChangeNailScale;
 
-            yield return new WaitForSecondsRealtime(30f);
-            
+            yield return CoroutineUtil.WaitWithCancel(15f);
+
             On.NailSlash.StartSlash -= ChangeNailScale;
         }
 
         [HKCommand("bindings")]
         [Summary("Enables bindings.")]
-        [Cooldown(60 * 5)]
-        public IEnumerator EnableBindings()
+        [Cooldown(15)]
+        public static IEnumerator EnableBindings()
         {
             BindingsHelper.AddDetours();
 
@@ -483,43 +408,15 @@ namespace VocalKnight.Commands
 
             BindingsHelper.ShowIcons();
 
-            yield return new WaitForSecondsRealtime(60);
+            yield return CoroutineUtil.WaitWithCancel(15f);
 
             BindingsHelper.Unload();
         }
 
-        [HKCommand("float")]
-        [Cooldown(180)]
-        [Summary("Gain float for 30s.")]
-        public IEnumerator Float()
-        {
-            static void NoOp(On.HeroController.orig_AffectedByGravity orig, HeroController self, bool gravityapplies) {}
-            
-            HeroController.instance.AffectedByGravity(false);
-
-            On.HeroController.AffectedByGravity += NoOp;
-
-            yield return new WaitForSeconds(30);
-            
-            On.HeroController.AffectedByGravity -= NoOp;
-            
-            HeroController.instance.AffectedByGravity(true);
-        }
-
-        [HKCommand("Salubra")]
-        [Cooldown(30)]
-        [Summary("Gain salubra's blessing even when off a bench within a room.")]
-        public void Salubra()
-        {
-            GameObject bg = GameObject.Find("Blessing Ghost");
-
-            bg.LocateMyFSM("Blessing Control").SetState("Start Blessing");
-        }
-
         [HKCommand("hwurmpU")]
         [Summary("I don't even know honestly.")]
-        [Cooldown(60 * 5)]
-        public IEnumerator EnableMaggotPrimeSkin()
+        [Cooldown(15)]
+        public static IEnumerator EnableMaggotPrimeSkin()
         {
             GameObject go = UObject.Instantiate(_maggot, HeroController.instance.transform.position + new Vector3(0, 0, -1f), Quaternion.identity);
 
@@ -530,7 +427,7 @@ namespace VocalKnight.Commands
             var renderer = HeroController.instance.GetComponent<MeshRenderer>();
             renderer.enabled = false;
 
-            yield return new WaitForSecondsRealtime(60 * 2);
+            yield return CoroutineUtil.WaitWithCancel(15f);
 
             UObject.DestroyImmediate(go);
 
@@ -538,23 +435,23 @@ namespace VocalKnight.Commands
         }
 
         [HKCommand("walkspeed")]
-        [Cooldown(180)]
+        [Cooldown(15)]
         [Summary("Gain a random walk speed. Limit: [0.3, 10]")]
-        public IEnumerator WalkSpeed([EnsureFloat(0.3f, 10f)] float speed)
+        public static IEnumerator WalkSpeed([EnsureFloat(0.3f, 10f)] float speed)
         {
             float prev_speed = HeroController.instance.RUN_SPEED;
 
             HeroController.instance.RUN_SPEED *= speed;
 
-            yield return new WaitForSeconds(20f);
+            yield return CoroutineUtil.WaitWithCancel(15f);
 
             HeroController.instance.RUN_SPEED = prev_speed;
         }
 
         [HKCommand("geo")]
-        [Cooldown(400)]
+        [Cooldown(5)]
         [Summary("Explode with geo.")]
-        public void Geo()
+        public static void Geo()
         {
             GameObject[] geos = Resources.FindObjectsOfTypeAll<GameObject>().Where(x => x.name.StartsWith("Geo")).ToArray();
             
@@ -572,43 +469,22 @@ namespace VocalKnight.Commands
                               .GetMethod("StartRecoil", BindingFlags.NonPublic | BindingFlags.Instance)
                               ?.Invoke(HeroController.instance, new object[] { CollisionSide.left, true, 0 })
             );
-            
-            SpawnGeo(Random.Range(200, 4000), small, medium, large);
+
+            int amount = Random.Range(100, 500);
+            HeroController.instance.TakeGeo(amount);
+            SpawnGeo(amount, small, medium, large);
         }
 
         [HKCommand("respawn")]
-        [Cooldown(120)]
+        [Cooldown(5)]
         [Summary("Hazard respawn")]
-        public void HazardRespawn()
+        public static void HazardRespawn()
         {
             // Don't trigger during transitions or anything
             if (HeroController.instance.transitionState != HeroTransitionState.WAITING_TO_TRANSITION)
                 return;
             
             HeroController.instance.StartCoroutine(HeroController.instance.HazardRespawn());
-        }
-
-        [HKCommand("knockback")]
-        [Cooldown(40)]
-        public void Knockback(string dirStr)
-        {
-            CollisionSide dir = dirStr switch
-            {
-                "left" => CollisionSide.left,
-                "right" => CollisionSide.right,
-                "up" => CollisionSide.top,
-                "top" => CollisionSide.top,
-                "down" => CollisionSide.bottom,
-                "bottom" => CollisionSide.bottom,
-                _ => CollisionSide.other
-            };
-            
-            HeroController.instance.proxyFSM.SendEvent("HeroCtrl-HeroDamaged");
-            HeroController.instance.StartCoroutine(
-                (IEnumerator) typeof(HeroController)
-                              .GetMethod("StartRecoil", BindingFlags.NonPublic | BindingFlags.Instance)
-                              ?.Invoke(HeroController.instance, new object[] { dir, true, 0 })
-            );
         }
 
         private static void SpawnGeo(int amount, GameObject smallGeoPrefab, GameObject mediumGeoPrefab, GameObject largeGeoPrefab)
@@ -683,33 +559,12 @@ namespace VocalKnight.Commands
                 new Vector3(0f, 0f, 0f)
             );
         }
-        
-        [HKCommand("slaphand")]
-        [Cooldown(120)]
-        [Summary("Heavy blow if it was actually good.")]
-        public IEnumerator SlapHand()
-        {
-            void SlashHit(Collider2D col, GameObject gameobject)
-            {
-                Vector3 dir = (col.transform.position - HeroController.instance.transform.position).normalized;
 
-                if (!(col.gameObject.GetComponent<Rigidbody2D>() is Rigidbody2D rb2d)) return;
-                
-                rb2d.velocity = 40 * dir;
-                rb2d.drag = 6;
-            }
-            
-            ModHooks.SlashHitHook += SlashHit;
-
-            yield return new WaitForSeconds(60f);
-            
-            ModHooks.SlashHitHook -= SlashHit;
-        }
-
+        //TODO: Rewrite to only disable, not toggle (can't be giving them abilities they don't have yet)
         [HKCommand("toggle")]
         [Summary("Toggles an ability for 45 seconds. Options: [dash, superdash, claw, wings, nail, tear, dnail]")]
-        [Cooldown(60 * 4)]
-        public IEnumerator ToggleAbility(string ability)
+        [Cooldown(15)]
+        public static IEnumerator ToggleAbility(string ability)
         {
             const float time = 45;
 
@@ -736,19 +591,19 @@ namespace VocalKnight.Commands
                     yield return PlayerDataUtil.FakeSet(nameof(PlayerData.hasDreamNail), pd.hasDreamNail ^ true, time);
                     break;
                 case "nail":
-                    Mirror.SetField(HeroController.instance, "attack_cooldown", 15f);
+                    Mirror.SetField(HeroController.instance, "attack_cooldown", 15);
                     break;
             }
         }
 
         [HKCommand("doubledamage")]
         [Summary("Makes the player take double damage.")]
-        [Cooldown(60)]
-        public IEnumerator DoubleDamage()
+        [Cooldown(15)]
+        public static IEnumerator DoubleDamage()
         {
             static int InstanceOnTakeDamageHook(ref int hazardtype, int damage) => damage * 2;
             ModHooks.TakeDamageHook += InstanceOnTakeDamageHook;
-            yield return new WaitForSecondsRealtime(30);
+            yield return CoroutineUtil.WaitWithCancel(15f);
             ModHooks.TakeDamageHook -= InstanceOnTakeDamageHook;
         }
     }

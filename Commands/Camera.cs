@@ -4,6 +4,7 @@ using VocalKnight.Components;
 using VocalKnight.Entities.Attributes;
 using VocalKnight.Extensions;
 using VocalKnight.Precondition;
+using VocalKnight.Utils;
 using JetBrains.Annotations;
 using Vasi;
 using On.HutongGames.PlayMaker.Actions;
@@ -31,16 +32,16 @@ namespace VocalKnight.Commands
         }
 
         private Matrix4x4 _reflectMatrix = Matrix4x4.identity;
-        private CameraEffects _activeEffects;
+        private static CameraEffects _activeEffects;
 
-        private readonly Material _invertMat = new(ObjectLoader.Shaders["Custom/InvertColor"]);
+        private readonly static Material _invertMat = new(ObjectLoader.Shaders["Custom/InvertColor"]);
 
         [HKCommand("cameffect")]
         [Summary("Applies various effects to the camera.\nEffects: Invert, Flip, Nausea, Backwards, Mirror, Pixelate, and Zoom.")]
-        [Cooldown(30, 4)]
-        public IEnumerator AddEffect(string effect)
+        [Cooldown(15)]
+        public static IEnumerator AddEffect(string effect)
         {
-            const float time = 60f;
+            const float time = 15f;
 
             CameraEffects camEffect;
 
@@ -68,7 +69,7 @@ namespace VocalKnight.Commands
                     tk2dCam.ZoomFactor = 5f;
                     _activeEffects |= camEffect;
 
-                    yield return new WaitForSecondsRealtime(time / 6);
+                    yield return CoroutineUtil.WaitWithCancel(time);
 
                     tk2dCam.ZoomFactor = 1f;
                     _activeEffects &= ~camEffect;
@@ -82,7 +83,7 @@ namespace VocalKnight.Commands
                     ivc.CurrentMaterial = _invertMat;
                     ivc.enabled = true;
 
-                    yield return new WaitForSecondsRealtime(time);
+                    yield return CoroutineUtil.WaitWithCancel(time);
 
                     ivc.enabled = false;
 
@@ -95,7 +96,7 @@ namespace VocalKnight.Commands
                     pix.mainCamera ??= cam;
                     pix.enabled = true;
 
-                    yield return new WaitForSecondsRealtime(time);
+                    yield return CoroutineUtil.WaitWithCancel(time);
 
                     pix.enabled = false;
 
@@ -133,7 +134,7 @@ namespace VocalKnight.Commands
                     _activeEffects |= CameraEffects.Mirror;
 
                     // Much shorter than the other effects due to it being a lot harder to play around
-                    yield return new WaitForSecondsRealtime(time / 4);
+                    yield return CoroutineUtil.WaitWithCancel(time);
 
                     SetPosition.DoSetPosition -= PreventCameraReset;
 
@@ -147,7 +148,7 @@ namespace VocalKnight.Commands
                 }
                 default:
                     _activeEffects |= camEffect;
-                    yield return new WaitForSecondsRealtime(time);
+                    yield return CoroutineUtil.WaitWithCancel(time);
                     _activeEffects &= ~camEffect;
                     break;
             }

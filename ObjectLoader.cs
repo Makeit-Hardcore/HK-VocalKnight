@@ -56,6 +56,64 @@ namespace VocalKnight
                 ("buzzer", null), ("Crossroads_ShamanTemple", "_Enemies/Buzzer")
             },
             {
+                //pancakes need to spawn relative to the player, take notes from jars method
+                ("hu", null), ("Fungus2_32", "Warrior/Ghost Warrior Hu")
+            },
+            {
+                //any way to make the attacks span the entire room?
+                ("noeyes", null), ("Fungus1_35", "Warrior/Ghost Warrior No Eyes")
+            },
+            {
+                //make scythes attack more like Marmu, but more slowly
+                ("galien", null), ("Deepnest_40", "Warrior/Ghost Warrior Galien")
+            },
+            {
+                //Map out a max height and have him follow the player
+                ("gorb", null), ("Cliffs_02_boss", "Warrior/Ghost Warrior Slug")
+            },
+            {
+                //Have him follow the player
+                ("markoth", null), ("Deepnest_East_10", "Warrior/Ghost Warrior Markoth")
+            },
+            {
+                //He just stands there... menacingly! ... Fix
+                ("xero", null), ("RestingGrounds_02_boss", "Warrior/Ghost Warrior Xero")
+            },
+            {
+                //Literally perfect in every way
+                ("marmu", null), ("Fungus3_40_boss", "Warrior/Ghost Warrior Marmu")
+            },
+            {
+                ("mawlek", null), ("Crossroads_09", "_Enemies/Mawlek Body")
+            },
+            {
+                ("sword", null), ("Ruins1_17", "Ruins Flying Sentry")
+            },
+            {
+                ("javelin", null), ("Ruins1_17", "Ruins Flying Sentry Javelin")
+            },
+            {
+                ("petra", null), ("Fungus3_04", "Mantis Heavy Flyer")
+            },
+            {
+                ("belfly", null), ("Deepnest_East_08", "Ceiling Dropper")
+            },
+            {
+                ("crystal", null), ("Mines_23", "Crystal Flyer")
+            },
+            {
+                ("radiance", null), ("Dream_Final_Boss", "Boss Control/Radiance")
+            },
+            {
+                ("bigbee", null), ("Hive_03", "Big Bee (2)")
+            },
+            {
+                ("drillbee", null), ("Hive_03", "Bee Stinger (7)")
+            },
+            {
+                ("angrybuzzer", null), ("Crossroads_05", "Infected Parent/Angry Buzzer")
+            },
+            {
                 ("prefab_jar", null), ("Ruins2_11", "Break Jar (6)")
             },
             {
