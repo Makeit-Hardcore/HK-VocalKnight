@@ -32,14 +32,14 @@ namespace VocalKnight.Commands
         }
 
         private Matrix4x4 _reflectMatrix = Matrix4x4.identity;
-        private static CameraEffects _activeEffects;
+        private CameraEffects _activeEffects;
 
-        private readonly static Material _invertMat = new(ObjectLoader.Shaders["Custom/InvertColor"]);
+        private readonly Material _invertMat = new(ObjectLoader.Shaders["Custom/InvertColor"]);
 
         [HKCommand("cameffect")]
         [Summary("Applies various effects to the camera.\nEffects: Invert, Flip, Nausea, Backwards, Mirror, Pixelate, and Zoom.")]
         [Cooldown(15)]
-        public static IEnumerator AddEffect(string effect)
+        public IEnumerator AddEffect(string effect)
         {
             const float time = 15f;
 

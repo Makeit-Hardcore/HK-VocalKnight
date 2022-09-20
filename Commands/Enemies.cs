@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Collections;
 using VocalKnight.Components;
+using VocalKnight.Entities.Attributes;
 using VocalKnight.Extensions;
 using VocalKnight.Precondition;
 using VocalKnight.Utils;
@@ -14,8 +15,9 @@ namespace VocalKnight.Commands
 {
     public class Enemies
     {
-        [Cooldown(1)]
-        public static void SpawnEnemy(string name)
+        [HKCommand("enemy")]
+        [Cooldown(2)]
+        public  void SpawnEnemy(string name)
         {
             Logger.Log($"Trying to spawn enemy {name}");
             if (!ObjectLoader.InstantiableObjects.TryGetValue(name, out GameObject go))
@@ -29,15 +31,16 @@ namespace VocalKnight.Commands
             enemy.SetActive(true);
         }
 
-        [Cooldown(2)]
-        public static IEnumerator Jars()
+        [HKCommand("jars")]
+        [Cooldown(5)]
+        public  IEnumerator Jars()
         {
             const string path = "_GameCameras/CameraParent/tk2dCamera/SceneParticlesController/town_particle_set/Particle System";
-            string[] enemies = {"roller", "aspid", "buzzer"};
+            string[] enemies = {"roller", "aspid", "buzzer", "crystal", "petra", "drillbee", "angrybuzzer", "sword", "javelin"};
             AudioClip shatter_clip = Game.Clips.First(x => x.name == "globe_break_larger");
             Vector3 pos = HeroController.instance.transform.position;
             GameObject break_jar = ObjectLoader.InstantiableObjects["prefab_jar"];
-            for (int i = -1; i <= 1; i++)
+            for (int i = -2; i <= 2; i++)
             {
                 // Spawn the jar
                 GameObject go = Object.Instantiate
@@ -65,8 +68,9 @@ namespace VocalKnight.Commands
             }
         }
 
+        [HKCommand("purevessel")]
         [Cooldown(5)]        
-        public static void SpawnPureVessel()
+        public  void SpawnPureVessel()
         {
             // stolen from https://github.com/SalehAce1/PathOfPureVessel
             var (x, y, _) = HeroController.instance.gameObject.transform.position;
@@ -120,9 +124,9 @@ namespace VocalKnight.Commands
             cp.xMin = x - castLeft.distance;
         }
 
-        //BUG: Revek spawns, but doesn't attack; issue with collider
+        [HKCommand("revek")]
         [Cooldown(30)]
-        public static IEnumerator Revek()
+        public  IEnumerator Revek()
         {
             GameObject revek = Object.Instantiate
             (
@@ -169,14 +173,16 @@ namespace VocalKnight.Commands
             USceneManager.activeSceneChanged -= OnLoad;
         }
 
+        [HKCommand("shade")]
         [Cooldown(5)]
-        public static void SpawnShade()
+        public  void SpawnShade()
         {
             Object.Instantiate(GameManager.instance.sm.hollowShadeObject, HeroController.instance.transform.position, Quaternion.identity);
         }
 
-        [Cooldown(10)]
-        public static IEnumerator StartZapping()
+        [HKCommand("zap")]
+        [Cooldown(15)]
+        public IEnumerator StartZapping()
         {
             GameObject prefab = ObjectLoader.InstantiableObjects["zap"];
             for (int i = 0; i < 12; i++)

@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using VocalKnight.Entities.Attributes;
 using VocalKnight.Precondition;
+using VocalKnight.Utils;
 using HutongGames.PlayMaker;
 using JetBrains.Annotations;
 using Modding;
@@ -16,14 +17,14 @@ namespace VocalKnight.Commands
     [UsedImplicitly]
     public class Game
     {
-        internal static AudioClip[] Clips { get; private set; }
+        internal static AudioClip[] Clips { get; private set; } = Resources.FindObjectsOfTypeAll<AudioClip>();
 
         public Game()
         {
             // Just for the side effects.
             Resources.LoadAll("");
 
-            Clips = Resources.FindObjectsOfTypeAll<AudioClip>();
+            //Clips = Resources.FindObjectsOfTypeAll<AudioClip>();
         }
 
         [HKCommand("setText")]
@@ -38,6 +39,13 @@ namespace VocalKnight.Commands
             yield return new WaitForSeconds(20f);
 
             ModHooks.LanguageGetHook -= OnLangGet;
+        }
+
+        [HKCommand("reset")]
+        [Cooldown(0)]
+        public void Reset()
+        {
+            CoroutineUtil.cancel = true;
         }
 
         [HKCommand("heal")]

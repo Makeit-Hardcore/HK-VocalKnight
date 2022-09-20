@@ -13,9 +13,9 @@ namespace VocalKnight.Commands
     public class Area
     {
         [HKCommand("bees")]
-        [Cooldown(100)]
+        [Cooldown(15)]
         [Summary("Hive knight bees.")]
-        public static IEnumerator Bees()
+        public IEnumerator Bees()
         {
             Vector3 pos;
             RaycastHit2D floorHit;
@@ -60,7 +60,7 @@ namespace VocalKnight.Commands
         [HKCommand("lasers")]
         [Cooldown(5)]
         [Summary("Summons crystal peak lasers.")]
-        public static void Lasers()
+        public void Lasers()
         {
             Vector3 pos = HeroController.instance.transform.position;
 
@@ -74,7 +74,7 @@ namespace VocalKnight.Commands
 
             const float MAX_ADD = 10;
 
-            for (int i = -2; i <= 2; i++)
+            for (int i = -5; i <= 5; i++)
             {
                 Vector3 turret_pos = pos + new Vector3(i * 5, MAX_ADD, 0);
 
@@ -108,8 +108,8 @@ namespace VocalKnight.Commands
 
         [HKCommand("spikefloor")]
         [Summary("Spawns nkg spikes.")]
-        [Cooldown(1)]
-        public static IEnumerator SpikeFloor()
+        [Cooldown(10)]
+        public IEnumerator SpikeFloor()
         {
             Vector3 hero_pos = HeroController.instance.transform.position;
 
@@ -141,11 +141,11 @@ namespace VocalKnight.Commands
                 
                 ctrl.SendEvent("SPIKES READY");
             }
-            
+
             audio_player.PlayOneShot(Game.Clips.FirstOrDefault(x => x.name == "grimm_spikes_pt_1_grounded"));
-            
+
             yield return new WaitForSeconds(0.55f);
-            
+
             foreach (PlayMakerFSM spike in spike_fsms)
             {
                 spike.SendEvent("SPIKES UP");
@@ -177,7 +177,7 @@ namespace VocalKnight.Commands
         [HKCommand("orb")]
         [Cooldown(1)]
         [Summary("Spawns an abs orb.")]
-        public static IEnumerator SpawnAbsOrb()
+        public IEnumerator SpawnAbsOrb()
         {
             if (HeroController.instance == null)
                 yield break;

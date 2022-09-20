@@ -44,36 +44,27 @@ namespace VocalKnight
         public void Execute(string command, ReadOnlyCollection<string> blacklist)
         {
             string[] pieces = command.Split(Seperator);
-
             IOrderedEnumerable<Command> found = Commands
                                                 .Where(x => x.Name.Equals(pieces[0], StringComparison.InvariantCultureIgnoreCase))
                                                 .OrderByDescending(x => x.Priority);
-            
+
             foreach (Command c in found)
             {
-                bool allGood = !blacklist.Contains(c.Name, StringComparer.OrdinalIgnoreCase);
-
-                foreach (PreconditionAttribute p in c.Preconditions)
+                if (c.Preconditions.FirstOrDefault() is CooldownAttribute cooldown)
                 {
-                    allGood = false;
-
-                    if (c.Preconditions.FirstOrDefault() is CooldownAttribute cooldown)
+                    double secRemaining = (cooldown.ResetTime - DateTimeOffset.Now).TotalSeconds;
+                    if (secRemaining > 0)
                     {
-                        Logger.Log
-                        (
-                            $"The coodown for command {c.Name} failed. "
-                            + $"The cooldown has {cooldown.MaxUses - cooldown.Uses} and will reset in {cooldown.ResetTime - DateTimeOffset.Now}"
-                        );
+                        Logger.LogWarn("Cooldown for command " + c.Name + " still has " + secRemaining + " seconds remaining.");
+                        continue;
                     }
-
-                    continue;
                 }
 
                 IEnumerable<string> args = pieces.Skip(1);
-
                 if (!BuildArguments(args, c, out object[] parsed))
                     continue;
-                
+                Logger.Log($"Built arguments for command {command}.");
+
                 foreach (PreconditionAttribute precond in c.Preconditions)
                 {
                     precond.Use();
@@ -81,8 +72,6 @@ namespace VocalKnight
 
                 try
                 {
-                    Logger.Log($"Built arguments for command {command}.");
-
                     IEnumerator RunCommand()
                     {
                         /*
@@ -191,7 +180,7 @@ namespace VocalKnight
                     continue;
 
                 Commands.Add(new Command(attr.Name, method, instance));
-                
+
                 Logger.Log($"Added command: {attr.Name}");
             }
         }
