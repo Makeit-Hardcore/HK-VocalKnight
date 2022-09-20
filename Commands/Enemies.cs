@@ -28,6 +28,7 @@ namespace VocalKnight.Commands
             Vector3 position = HeroController.instance.gameObject.transform.position;
             position.y += 5;
             GameObject enemy = Object.Instantiate(go, position, Quaternion.identity);
+            GameObject.Destroy(enemy.GetComponent<PersistentBoolItem>());
             enemy.SetActive(true);
         }
 

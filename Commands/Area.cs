@@ -13,7 +13,7 @@ namespace VocalKnight.Commands
     public class Area
     {
         [HKCommand("bees")]
-        [Cooldown(15)]
+        [Cooldown(5)]
         [Summary("Hive knight bees.")]
         public IEnumerator Bees()
         {
@@ -54,6 +54,44 @@ namespace VocalKnight.Commands
                 // Start the swarming
                 ctrl.SendEvent("SWARM");
                 yield return CoroutineUtil.WaitWithCancel(0.2f);
+            }
+        }
+
+        [HKCommand("belfly")]
+        [Cooldown(5)]
+        [Summary("Spawn a couple of the boom bats")]
+        public IEnumerator Belflies()
+        {
+            Vector3 pos;
+            //RaycastHit2D floorHit;
+
+            for (int i = 0; i < 5; i++)
+            {
+                pos = HeroController.instance.transform.position;
+                if (HeroController.instance.cState.facingRight) pos.x += 5;
+                else pos.x -= 5;
+                pos.y += 5;
+                //floorHit = Physics2D.Raycast(pos, Vector2.down, 500, 1 << 8);
+                //if (floorHit && floorHit.point.y < pos.y)
+                //    pos = floorHit.point;
+
+                if (!ObjectLoader.InstantiableObjects.TryGetValue("belfly", out GameObject go))
+                {
+                    Logger.LogError("Could not get GameObject " + "belfly");
+                    yield break;
+                }
+                GameObject fly = Object.Instantiate(go, pos, Quaternion.identity);
+                GameObject.Destroy(fly.GetComponent<PersistentBoolItem>());
+                fly.SetActive(true);
+
+                //Wait for the belfly to reach Idle state
+                //yield return null;
+                //yield return null;
+
+                PlayMakerFSM ctrl = fly.LocateMyFSM("Ceiling Dropper");
+                ctrl.FsmVariables.GetFsmBool("Alert Range").Value = true;
+
+                yield return CoroutineUtil.WaitWithCancel(0.8f);
             }
         }
 

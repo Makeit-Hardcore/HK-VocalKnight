@@ -71,6 +71,7 @@ namespace VocalKnight.Utils
             { "enemy petra", new List<string>() {"petra","disc","blade"} },
             { "enemy sword", new List<string>() {"sword"} },
             { "enemy javelin", new List<string>() {"throw"} },
+            { "enemy roller", new List<string>() {"roll"} },
             { "enemy angrybuzzer", new List<string>() {"angry","mad","furious"} },
             { "enemy mawlek", new List<string>() {"maw","lick"} },
             { "enemy aspid", new List<string>() {"spit","primal","triple"} },
