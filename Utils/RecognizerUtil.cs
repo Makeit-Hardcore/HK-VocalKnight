@@ -9,11 +9,11 @@ namespace VocalKnight.Utils
 		private DictationRecognizer dictRecognizer;
 
 		public static ObservableCollection<string> foundCommands = new ObservableCollection<string>();
-		// Dict{ command, (list of keywords) }
-		private static Dictionary<string, List<string>> keywords = new Dictionary<string, List<string>>()
+        // Dict{ command, (list of keywords) }
+        private static Dictionary<string, List<string>> keywords = new Dictionary<string, List<string>>()
         {
-			{ "reset", new List<string>() {"reset reset reset"} },
-			{ "spikefloor", new List<string>() {"spike","grim","point"} },
+            { "reset", new List<string>() {"reset reset reset"} },
+            { "spikefloor", new List<string>() {"spike","grim","point"} },
             { "bees", new List<string>() {"bee","bea","hive"} },
             { "lasers", new List<string>() {"laser","peak","peek"} },
             { "orb", new List<string>() {"orb","sphere","light","lite"} },
@@ -27,7 +27,6 @@ namespace VocalKnight.Utils
             { "ax2uBlind", new List<string>() {"dark","blind","dinilb"} }, //figure out how it reads "blind" backwards
             { "nopogo", new List<string>() {"pogo","down"} },
             { "sleep", new List<string>() {"sleep","tired","drowsy"} },
-            { "limitSoul", new List<string>() {"soul","limit"} }, //FIX
             { "wind", new List<string>() {"wind","blow","push"} },
             { "timescale 0.5", new List<string>() {"slow"} },
             { "timescale 2", new List<string>() {"fast","time"} },
@@ -43,7 +42,9 @@ namespace VocalKnight.Utils
             { "geo", new List<string>() {"geo","money","coin"} }, //What does the rec thing "geo" sounds like in a sentence?
             { "respawn", new List<string>() {"ouch","hurt"} },
             { "bench", new List<string>() {"bench","rest","spawn"} }, //IMPLEMENT
-            { "die", new List<string>() {"die","death","kill","dead"} }, //IMPLEMENT
+            { "die", new List<string>() {"die","dye","death","dead"} }, //IMPLEMENT
+            { "bounce", new List<string>() {"bounce","shroom","fung"} },
+            { "gravup", new List<string>() {"up","gravit","top"} },
             { "toggle dash", new List<string>() {"dash"} },
             { "toggle superdash", new List<string>() {"sea dash"} }, //VERIFY KEYWORD
             { "toggle claw", new List<string>() {"claw","wall","cling" } },
@@ -63,7 +64,7 @@ namespace VocalKnight.Utils
             { "enemy gorb", new List<string>() {"brain","ascend"} }, //FIX
             { "enemy noeyes", new List<string>() {"eye","baby"} }, //FIX
             { "enemy galien", new List<string>() {"alien","spin"} }, //FIX
-            { "enemy xero", new List<string>() {"0","none","nothing"} }, //FIX
+            { "xero", new List<string>() {"0","none","nothing"} }, //FIX
             { "enemy markoth", new List<string>() {"shield","mark"} }, //FIX
             { "enemy bigbee", new List<string>() {"big","large"} },
             { "enemy drillbee", new List<string>() {"drill","screw","sting"} },
@@ -77,6 +78,7 @@ namespace VocalKnight.Utils
             { "enemy aspid", new List<string>() {"spit","primal","triple"} },
             { "enemy radiance", new List<string>() {"rad","raid","moth","god"} } //FIX
         };
+        private static int runcount = 0;
 
 		public RecognizerUtil()
 		{
@@ -84,40 +86,55 @@ namespace VocalKnight.Utils
 
         public void StartRecognizer()
         {
+            Logger.Log("Starting new recognizer " + runcount++);
             dictRecognizer = new DictationRecognizer();
             dictRecognizer.DictationHypothesis += Hypothesis;
             dictRecognizer.DictationResult += Result;
             dictRecognizer.DictationComplete += Completion;
             dictRecognizer.DictationError += Error;
             dictRecognizer.Start();
+            Logger.Log("New recognizer started");
         }
 
         public void KillRecognizer()
         {
+            Logger.Log("Attempting to kill recognizer");
             if (dictRecognizer != null)
             {
+                Logger.Log("Killing recognizer");
                 if (dictRecognizer.Status == SpeechSystemStatus.Running)
+                {
+                    Logger.Log("Recognizer found running. Stopping.");
                     dictRecognizer.Stop();
+                    Logger.Log("Recognizer stopped.");
+                }
                 dictRecognizer.DictationHypothesis -= Hypothesis;
                 dictRecognizer.DictationResult -= Result;
                 dictRecognizer.DictationComplete -= Completion;
                 dictRecognizer.DictationError -= Error;
                 dictRecognizer.Dispose();
                 dictRecognizer = null;
+                Logger.Log("Recognizer disposed of");
             }
             else Logger.LogWarn("Tried to kill Recognizer, but found NULL");
         }
 
         public void Hypothesis(string text)
         {
+            Logger.Log("Checking hypothesis: " + text);
             foreach (string command in keywords.Keys)
                 foreach (string keyword in keywords[command])
                     if (!foundCommands.Contains(command) && text.Contains(keyword))
+                    {
+                        Logger.Log("Found command " + command);
                         foundCommands.Add(command);
+                        Logger.Log("Command " + command + " logged");
+                    }
         }
 
         public void Result(string text, ConfidenceLevel confidence)
         {
+            Logger.Log("Result: " + text);
             Hypothesis(text);
             foundCommands.Clear();
         }
@@ -131,6 +148,7 @@ namespace VocalKnight.Utils
                 case DictationCompletionCause.Canceled:
                 case DictationCompletionCause.Complete:
                     // Nothing really wrong, just a restart required
+                    Logger.Log("Recognizer completed without error");
                     KillRecognizer();
                     StartRecognizer();
                     break;

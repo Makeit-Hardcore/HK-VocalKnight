@@ -146,6 +146,11 @@ namespace VocalKnight.Commands
 
                     break;
                 }
+                case CameraEffects.Mirror:
+                    _activeEffects |= camEffect;
+                    yield return new Player().InvertControls();
+                    _activeEffects &= ~camEffect;
+                    break;
                 default:
                     _activeEffects |= camEffect;
                     yield return CoroutineUtil.WaitWithCancel(time);

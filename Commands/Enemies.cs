@@ -5,8 +5,11 @@ using VocalKnight.Entities.Attributes;
 using VocalKnight.Extensions;
 using VocalKnight.Precondition;
 using VocalKnight.Utils;
+using HutongGames.PlayMaker;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
+using SFCoreFSM = SFCore.Utils.FsmUtil;
+using Satch = Satchel;
 using UnityEngine.SceneManagement;
 using USceneManager = UnityEngine.SceneManagement.SceneManager;
 using Vasi;
@@ -17,24 +20,133 @@ namespace VocalKnight.Commands
     {
         [HKCommand("enemy")]
         [Cooldown(2)]
-        public  void SpawnEnemy(string name)
+        public void SpawnEnemy(string name)
+        {
+            GameObject enemy = SpawnEnemyGeneric(name);
+
+            if (enemy != null)
+                enemy.SetActive(true);
+        }
+
+        [HKCommand("xero")]
+        [Cooldown(15)]
+        public void SpawnXero()
+        {
+            GameObject xero = SpawnEnemyGeneric("xero");
+            if (xero == null)
+                return;
+            
+            GameObject.Destroy(xero.LocateMyFSM("Y Limit"));
+            PlayMakerFSM ctrlMov = xero.LocateMyFSM("Movement");
+            PlayMakerFSM ctrlAttack = xero.LocateMyFSM("Attacking");
+
+            //Some breaking error with these actions, remove for now
+            //(Xero still spawns just fine, but with less fanfare)
+            ctrlMov.GetState("Warp In").RemoveAllOfType<ActivateGameObject>();
+
+            //Prevent Xero from cancelling attacks based on player position
+            SFCoreFSM.ChangeFsmTransition(ctrlAttack, "Wait Rage", "FINISHED", "Antic");
+            SFCoreFSM.ChangeFsmTransition(ctrlAttack, "Antic Rage", "CANCEL", "Antic");
+            SFCoreFSM.ChangeFsmTransition(ctrlAttack, "Wait", "FINISHED", "Antic");
+
+            //Rewrite his movement code to constantly follow the player
+            
+            SFCoreFSM.AddFsmFloatVariable(ctrlMov, "Hero Y");
+
+            FsmState getPosState = SFCoreFSM.AddFsmState(ctrlMov, "Get Hero Pos");
+            SFCoreFSM.AddFsmAction(getPosState, new GetPosition()
+            {
+                gameObject = new FsmOwnerDefault()
+                {
+                    OwnerOption = OwnerDefaultOption.SpecifyGameObject,
+                    GameObject = HeroController.instance.gameObject
+                },
+                vector = new Vector3(0, 0, 0),
+                x = SFCoreFSM.GetFloatVariable(ctrlMov, "Hero X"),
+                y = SFCoreFSM.GetFloatVariable(ctrlMov, "Hero Y"),
+                z = 0f,
+                space = 0,
+                everyFrame = false
+            });
+            SFCoreFSM.AddFsmAction(getPosState, new FloatAddV2()
+            {
+                floatVariable = SFCoreFSM.GetFloatVariable(ctrlMov, "Hero Y"),
+                add = 5f,
+                everyFrame = false,
+                perSecond = false,
+                fixedUpdate = false,
+                activeBool = true
+            });
+
+            FsmState setState = SFCoreFSM.AddFsmState(ctrlMov, "Set");
+            SFCoreFSM.AddFsmAction(setState, new SetPosition()
+            {
+                gameObject = new FsmOwnerDefault()
+                {
+                    OwnerOption = OwnerDefaultOption.SpecifyGameObject,
+                    GameObject = SFCoreFSM.GetFsmGameObjectVariable(ctrlMov, "Target")
+                },
+                vector = new Vector3(0,0,0),
+                x = SFCoreFSM.GetFsmFloatVariable(ctrlMov, "Hero X"),
+                y = SFCoreFSM.GetFsmFloatVariable(ctrlMov, "Hero Y"),
+                z = 0f,
+                space = 0,
+                everyFrame = false,
+                lateUpdate = false
+            });
+
+            FsmState moveState = SFCoreFSM.AddFsmState(ctrlMov, "Move");
+            SFCoreFSM.AddFsmAction(moveState, new ChaseObjectV2()
+            {
+                gameObject = new FsmOwnerDefault()
+                {
+                    OwnerOption = OwnerDefaultOption.SpecifyGameObject,
+                    GameObject = ctrlMov.gameObject
+                },
+                target = SFCoreFSM.FindFsmGameObjectVariable(ctrlMov, "Target"),
+                speedMax = 15f,
+                accelerationForce = 50f,
+                offsetX = 0f,
+                offsetY = 0f
+            });
+
+            //Might need to change this to SFCoreFSM.AddFsmTransition()
+            SFCoreFSM.AddFsmTransition(ctrlMov, "Get Hero Pos", "FINISHED", "Set");
+            SFCoreFSM.AddFsmTransition(ctrlMov, "Set", "FINISHED", "Move");
+            SFCoreFSM.AddFsmTransition(ctrlMov, "Move", "FINISHED", "Get Hero Pos");
+
+            SFCoreFSM.ChangeFsmTransition(ctrlMov, "Ready", "FINISHED", "Get Hero Pos");
+            SFCoreFSM.ChangeFsmTransition(ctrlMov, "Attacking", "ATTACK END", "Get Hero Pos");
+            SFCoreFSM.ChangeFsmTransition(ctrlMov, "Return", "FINISHED", "Get Hero Pos");
+            
+            xero.SetActive(true);
+        }
+
+        private GameObject SpawnEnemyGeneric(string name)
         {
             Logger.Log($"Trying to spawn enemy {name}");
             if (!ObjectLoader.InstantiableObjects.TryGetValue(name, out GameObject go))
             {
                 Logger.LogError("Could not get GameObject " + name);
-                return;
+                return null;
             }
             Vector3 position = HeroController.instance.gameObject.transform.position;
             position.y += 5;
             GameObject enemy = Object.Instantiate(go, position, Quaternion.identity);
+
+            //For enemies that do not typically respawn until bench
             GameObject.Destroy(enemy.GetComponent<PersistentBoolItem>());
-            enemy.SetActive(true);
+
+            //Killing a spawned ghost warrior does not count as defeating the real deal
+            if (enemy.name.Contains("Ghost Warrior"))
+                enemy.LocateMyFSM("Set Ghost PD Int").GetState("Set").RemoveAllOfType<SetPlayerDataInt>();
+
+            return enemy;
         }
 
         [HKCommand("jars")]
         [Cooldown(5)]
-        public  IEnumerator Jars()
+        public IEnumerator Jars()
         {
             const string path = "_GameCameras/CameraParent/tk2dCamera/SceneParticlesController/town_particle_set/Particle System";
             string[] enemies = {"roller", "aspid", "buzzer", "crystal", "petra", "drillbee", "angrybuzzer", "sword", "javelin"};

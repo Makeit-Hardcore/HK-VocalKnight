@@ -112,9 +112,9 @@ namespace VocalKnight.Commands
 
             const float MAX_ADD = 10;
 
-            for (int i = -5; i <= 5; i++)
+            for (int i = -10; i <= 10; i++)
             {
-                Vector3 turret_pos = pos + new Vector3(i * 5, MAX_ADD, 0);
+                Vector3 turret_pos = pos + new Vector3(i * 2, MAX_ADD, 0);
 
                 RaycastHit2D up = Physics2D.Raycast(pos, (turret_pos - pos).normalized, 500, 1 << 8);
 

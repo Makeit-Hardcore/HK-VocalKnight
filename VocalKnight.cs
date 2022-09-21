@@ -59,16 +59,10 @@ namespace VocalKnight
 
             ConfigureCooldowns();
 
-            ModHooks.NewGameHook += NewRecognizer;
-            ModHooks.SavegameLoadHook += NewRecognizer;
+            NewRecognizer();
             RecognizerUtil.foundCommands.CollectionChanged += ExecuteCommands;
 
             Log("Initialized");
-        }
-
-        public void NewRecognizer(int id)
-        {
-            NewRecognizer();
         }
 
         public void NewRecognizer()

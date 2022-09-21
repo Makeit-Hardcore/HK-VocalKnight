@@ -9,6 +9,7 @@ using VocalKnight.Precondition;
 using VocalKnight.Utils;
 using HutongGames.PlayMaker;
 using Modding;
+using SFCore.Utils;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
@@ -308,6 +309,9 @@ namespace VocalKnight.Commands
 
             yield return CoroutineUtil.WaitWithCancel(15f);
 
+            //Fixes a glitch where ending low gravity while the player is airborne causes them to float up infinitely
+            yield return new WaitUntil(() => HeroController.instance.cState.onGround);
+
             rigidBody.gravityScale = def;
         }
 
@@ -334,13 +338,49 @@ namespace VocalKnight.Commands
                 return -change;
             }
 
+            void FaceLeft(On.HeroController.orig_FaceLeft orig, HeroController self)
+            {
+                HeroController.instance.cState.facingRight = true;
+                Vector3 localScale = HeroController.instance.transform.localScale;
+                localScale.x = -1f;
+                HeroController.instance.transform.localScale = localScale;
+            }
+
+            void FaceRight(On.HeroController.orig_FaceRight orig, HeroController self)
+            {
+                HeroController.instance.cState.facingRight = false;
+                Vector3 localScale = HeroController.instance.transform.localScale;
+                localScale.x = 1f;
+                HeroController.instance.transform.localScale = localScale;
+            }
+
             On.HeroController.Move += Invert;
-            ModHooks.DashVectorHook += InvertDash;
+            On.HeroController.FaceLeft += FaceLeft;
+            On.HeroController.FaceRight += FaceRight;
+            //ModHooks.DashVectorHook += InvertDash;
 
             yield return CoroutineUtil.WaitWithCancel(15f);
 
             On.HeroController.Move -= Invert;
-            ModHooks.DashVectorHook -= InvertDash;
+            On.HeroController.FaceLeft -= FaceLeft;
+            On.HeroController.FaceRight -= FaceRight;
+            //ModHooks.DashVectorHook -= InvertDash;
+        }
+
+        [HKCommand("bounce")]
+        [Cooldown(15)]
+        [Summary("Making the floor bouncy")]
+        public IEnumerator Bouncy()
+        {
+            void CauseBounce()
+            {
+                if (HeroController.instance.cState.onGround)
+                    HeroController.instance.ShroomBounce();
+            }
+
+            ModHooks.HeroUpdateHook += CauseBounce;
+            yield return CoroutineUtil.WaitWithCancel(15f);
+            ModHooks.HeroUpdateHook -= CauseBounce;
         }
 
         [HKCommand("slippery")]
@@ -478,16 +518,161 @@ namespace VocalKnight.Commands
         [HKCommand("respawn")]
         [Cooldown(5)]
         [Summary("Hazard respawn")]
-        public  void HazardRespawn()
+        public IEnumerator HazardRespawn()
+        {
+            // Don't trigger during transitions or anything
+            if (HeroController.instance.transitionState != HeroTransitionState.WAITING_TO_TRANSITION)
+                yield break;
+
+            HeroController.instance.TakeDamage(null, CollisionSide.bottom, 1, 2);
+        }
+
+        [HKCommand("die")]
+        [Cooldown(60)]
+        [Summary("Kills the player on the spot")]
+        public void KillPlayer()
         {
             // Don't trigger during transitions or anything
             if (HeroController.instance.transitionState != HeroTransitionState.WAITING_TO_TRANSITION)
                 return;
-            
-            HeroController.instance.StartCoroutine(HeroController.instance.HazardRespawn());
+
+            HeroController.instance.TakeDamage(null, CollisionSide.bottom, PlayerData.instance.health, 1);
         }
 
-        private  void SpawnGeo(int amount, GameObject smallGeoPrefab, GameObject mediumGeoPrefab, GameObject largeGeoPrefab)
+        //Following code taken from Benchwarp mod
+        [HKCommand("bench")]
+        [Cooldown(20)]
+        [Summary("Warps the player to the last bench they sat at")]
+        public IEnumerator BenchWarp()
+        {
+            // Don't trigger during transitions or anything
+            if (HeroController.instance.transitionState != HeroTransitionState.WAITING_TO_TRANSITION)
+                yield break;
+
+            GameManager.instance.SaveGame();
+            GameManager.instance.TimePasses();
+            UIManager.instance.UIClosePauseMenu();
+
+            // Collection of various redundant attempts to fix the infamous soul orb bug
+            HeroController.instance.TakeMPQuick(PlayerData.instance.MPCharge); // actually broadcasts the event
+            HeroController.instance.SetMPCharge(0);
+            PlayerData.instance.MPReserve = 0;
+            HeroController.instance.ClearMP(); // useless
+            PlayMakerFSM.BroadcastEvent("MP DRAIN"); // This is the main fsm path for removing soul from the orb
+            PlayMakerFSM.BroadcastEvent("MP LOSE"); // This is an alternate path (used for bindings and other things) that actually plays an animation?
+            PlayMakerFSM.BroadcastEvent("MP RESERVE DOWN");
+
+            // Set some stuff which would normally be set by LoadSave
+            HeroController.instance.AffectedByGravity(false);
+            HeroController.instance.transitionState = HeroTransitionState.EXITING_SCENE;
+            if (HeroController.SilentInstance != null)
+            {
+                if (HeroController.instance.cState.onConveyor || HeroController.instance.cState.onConveyorV || HeroController.instance.cState.inConveyorZone)
+                {
+                    HeroController.instance.GetComponent<ConveyorMovementHero>()?.StopConveyorMove();
+                    HeroController.instance.cState.inConveyorZone = false;
+                    HeroController.instance.cState.onConveyor = false;
+                    HeroController.instance.cState.onConveyorV = false;
+                }
+
+                HeroController.instance.cState.nearBench = false;
+            }
+            GameManager.instance.cameraCtrl.FadeOut(CameraFadeType.LEVEL_TRANSITION);
+
+            yield return new WaitForSecondsRealtime(0.5f);
+
+            // Actually respawn the character
+            GameManager.instance.SetPlayerDataBool(nameof(PlayerData.atBench), false);
+            // Allow the player to have control if they warp to a non-bench while diving or cdashing
+            if (HeroController.SilentInstance != null)
+            {
+                HeroController.instance.cState.superDashing = false;
+                HeroController.instance.cState.spellQuake = false;
+            }
+            GameManager.instance.ReadyForRespawn(false);
+
+            yield return new WaitWhile(() => GameManager.instance.IsInSceneTransition);
+
+            // Revert pause menu timescale
+            Time.timeScale = 1f;
+            GameManager.instance.FadeSceneIn();
+
+            // We have to set the game non-paused because TogglePauseMenu sucks and UIClosePauseMenu doesn't do it for us.
+            GameManager.instance.isPaused = false;
+
+            // Restore various things normally handled by exiting the pause menu. None of these are necessary afaik
+            GameCameras.instance.ResumeCameraShake();
+            if (HeroController.SilentInstance != null)
+            {
+                HeroController.instance.UnPause();
+            }
+            MenuButtonList.ClearAllLastSelected();
+
+            //This allows the next pause to stop the game correctly
+            TimeController.GenericTimeScale = 1f;
+
+            // Restores audio to normal levels. Unfortunately, some warps pop atm when music changes over
+            GameManager.instance.actorSnapshotUnpaused.TransitionTo(0f);
+            GameManager.instance.ui.AudioGoToGameplay(.2f);
+
+            bool IsDreamRoom()
+            {
+                return GameManager.instance.sm.mapZone switch
+                {
+                    GlobalEnums.MapZone.DREAM_WORLD
+                    or GlobalEnums.MapZone.GODS_GLORY
+                    or GlobalEnums.MapZone.GODSEEKER_WASTE
+                    or GlobalEnums.MapZone.WHITE_PALACE => true,
+                    _ => false,
+                };
+            }
+
+            // reset some things not cleaned up when exiting dream sequences, etc
+            if (HeroController.SilentInstance != null)
+            {
+                HeroController.SilentInstance.takeNoDamage = false;
+                if (!IsDreamRoom() && HeroController.SilentInstance.proxyFSM?.FsmVariables?.FindFsmBool("No Charms") is HutongGames.PlayMaker.FsmBool noCharms) noCharms.Value = false;
+            }
+            if (HutongGames.PlayMaker.FsmVariables.GlobalVariables.FindFsmBool("Is HUD Out") is HutongGames.PlayMaker.FsmBool hudOut && hudOut.Value)
+            {
+                PlayMakerFSM.BroadcastEvent("IN");
+            }
+        }
+
+        [HKCommand("gravup")]
+        [Cooldown(15)]
+        [Summary("Flips gravity upside down")]
+        public IEnumerator FlipGravity()
+        {
+            HeroController _mHc = HeroController.instance;
+            
+            void Flip()
+            {
+                _mHc.SetAttr("BUMP_VELOCITY", _mHc.GetAttr<HeroController, float>("BUMP_VELOCITY") * -1);
+                _mHc.BOUNCE_VELOCITY *= -1;
+                _mHc.WALLSLIDE_DECEL *= -1;
+                _mHc.WALLSLIDE_SPEED *= -1;
+                _mHc.SWIM_ACCEL *= -1;
+                _mHc.SWIM_MAX_SPEED *= -1;
+                _mHc.JUMP_SPEED_UNDERWATER *= -1;
+                _mHc.JUMP_SPEED *= -1;
+                _mHc.SHROOM_BOUNCE_VELOCITY *= -1;
+                _mHc.RECOIL_DOWN_VELOCITY *= -1;
+                _mHc.MAX_FALL_VELOCITY *= -1;
+                _mHc.MAX_FALL_VELOCITY_UNDERWATER *= -1;
+                //m_rb2d.gravityScale *= -1;
+                Physics2D.gravity *= -1;
+                Vector3 tmpVec3 = _mHc.gameObject.transform.localScale;
+                tmpVec3.y *= -1;
+                _mHc.gameObject.transform.localScale = tmpVec3;
+            }
+
+            Flip();
+            yield return CoroutineUtil.WaitWithCancel(15);
+            Flip();
+        }
+
+        private void SpawnGeo(int amount, GameObject smallGeoPrefab, GameObject mediumGeoPrefab, GameObject largeGeoPrefab)
         {
             if (amount <= 0) return;
 
@@ -564,7 +749,7 @@ namespace VocalKnight.Commands
         [HKCommand("toggle")]
         [Summary("Toggles an ability for 45 seconds. Options: [dash, superdash, claw, wings, nail, tear, dnail]")]
         [Cooldown(15)]
-        public  IEnumerator ToggleAbility(string ability)
+        public IEnumerator ToggleAbility(string ability)
         {
             const float time = 45;
 
