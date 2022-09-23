@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
 using System.Collections.Generic;
 using UnityEngine.Windows.Speech;
 
@@ -86,35 +87,32 @@ namespace VocalKnight.Utils
 
         public void StartRecognizer()
         {
-            Logger.Log("Starting new recognizer " + runcount++);
+            Logger.Log("Starting new DR " + ++runcount);
             dictRecognizer = new DictationRecognizer();
             dictRecognizer.DictationHypothesis += Hypothesis;
             dictRecognizer.DictationResult += Result;
             dictRecognizer.DictationComplete += Completion;
             dictRecognizer.DictationError += Error;
             dictRecognizer.Start();
-            Logger.Log("New recognizer started");
+            Logger.Log("Started new DR " + runcount);
         }
 
         public void KillRecognizer()
         {
-            Logger.Log("Attempting to kill recognizer");
             if (dictRecognizer != null)
             {
-                Logger.Log("Killing recognizer");
                 if (dictRecognizer.Status == SpeechSystemStatus.Running)
                 {
-                    Logger.Log("Recognizer found running. Stopping.");
                     dictRecognizer.Stop();
-                    Logger.Log("Recognizer stopped.");
                 }
                 dictRecognizer.DictationHypothesis -= Hypothesis;
                 dictRecognizer.DictationResult -= Result;
                 dictRecognizer.DictationComplete -= Completion;
                 dictRecognizer.DictationError -= Error;
+                Logger.Log("About to dispose of DR " + runcount);
                 dictRecognizer.Dispose();
                 dictRecognizer = null;
-                Logger.Log("Recognizer disposed of");
+                Logger.Log("Disposed of DR " + runcount);
             }
             else Logger.LogWarn("Tried to kill Recognizer, but found NULL");
         }
@@ -141,6 +139,7 @@ namespace VocalKnight.Utils
 
         public void Completion(DictationCompletionCause cause)
         {
+            Logger.Log("Completed for some reason.");
             switch (cause)
             {
                 case DictationCompletionCause.TimeoutExceeded:
@@ -149,8 +148,6 @@ namespace VocalKnight.Utils
                 case DictationCompletionCause.Complete:
                     // Nothing really wrong, just a restart required
                     Logger.Log("Recognizer completed without error");
-                    KillRecognizer();
-                    StartRecognizer();
                     break;
 
                 //TODO: Add visual feedback for the player for errors listed
@@ -158,12 +155,13 @@ namespace VocalKnight.Utils
                 case DictationCompletionCause.AudioQualityFailure:
                 case DictationCompletionCause.MicrophoneUnavailable:
                 case DictationCompletionCause.NetworkFailure:
+                default:
                     Logger.LogError("Error killed Dictation Recognizer");
-                    KillRecognizer();
                     Logger.Log("Attempting to restart recognizer...");
-                    StartRecognizer();
                     break;
             }
+            KillRecognizer();
+            StartRecognizer();
         }
 
         public void Error(string error, int hresult)

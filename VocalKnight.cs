@@ -3,6 +3,7 @@ using System;
 using UnityEngine;
 using UObject = UnityEngine.Object;
 using UnityEngine.Windows.Speech;
+using UnityEngine.UIElements;
 using System.Collections;
 using System.Collections.Specialized;
 using System.Collections.Generic;
@@ -20,7 +21,7 @@ namespace VocalKnight
         public Dictionary<string, int> Cooldowns = new();
         internal CommandProcessor Processor { get; private set; }
 
-        private static VocalKnight? _instance;
+        public static VocalKnight? _instance;
 
         public static VocalKnight Instance
         {
@@ -62,6 +63,11 @@ namespace VocalKnight
             NewRecognizer();
             RecognizerUtil.foundCommands.CollectionChanged += ExecuteCommands;
 
+            var go = new GameObject();
+            go.name = "KeyPressDetector";
+            UObject.DontDestroyOnLoad(go);
+            go.AddComponent<KeyPress>();
+
             Log("Initialized");
         }
 
@@ -69,6 +75,12 @@ namespace VocalKnight
         {
             if (recognizer != null) DeleteRecognizer();
 
+            recognizer = new RecognizerUtil();
+            recognizer.StartRecognizer();
+        }
+
+        public void ForceNewRecognizer()
+        {
             recognizer = new RecognizerUtil();
             recognizer.StartRecognizer();
         }
@@ -113,6 +125,18 @@ namespace VocalKnight
                     continue;
                 CooldownAttribute cd = c.Preconditions.OfType<CooldownAttribute>().First();
                 cd.Cooldown = TimeSpan.FromSeconds(time);
+            }
+        }
+    }
+
+    public class KeyPress : MonoBehaviour
+    {
+        public void Update()
+        {
+            if (Input.GetKeyUp(KeyCode.R))
+            {
+                Logger.Log("Abandoning old Recognizer...");
+                VocalKnight._instance.ForceNewRecognizer();
             }
         }
     }

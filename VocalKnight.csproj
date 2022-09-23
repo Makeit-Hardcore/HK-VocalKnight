@@ -17,6 +17,7 @@
         <HollowKnightRefs>..\API</HollowKnightRefs>
         <ExportDir>bin\Publish</ExportDir>
         <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+        <Platforms>AnyCPU;x64</Platforms>
     </PropertyGroup>
 
     <Import Project="LocalOverrides.targets" Condition="Exists('LocalOverrides.targets')" />
@@ -340,5 +341,9 @@
     <ItemGroup>
         <None Include=".gitignore" />
         <None Include="LocalOverrides.targets" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="DeepSpeech" Version="0.9.3" />
     </ItemGroup>
 </Project>
