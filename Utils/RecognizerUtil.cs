@@ -1,6 +1,7 @@
-﻿using System;
+﻿using System.Text.RegularExpressions;
 using System.Collections.ObjectModel;
 using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.Windows.Speech;
 
 namespace VocalKnight.Utils
@@ -10,6 +11,7 @@ namespace VocalKnight.Utils
 		private DictationRecognizer dictRecognizer;
 
 		public static ObservableCollection<string> foundCommands = new ObservableCollection<string>();
+        private static List<string> foundWords = new List<string>();
         // Dict{ command, (list of keywords) }
         private static Dictionary<string, List<string>> keywords = new Dictionary<string, List<string>>()
         {
@@ -119,15 +121,47 @@ namespace VocalKnight.Utils
 
         public void Hypothesis(string text)
         {
+            //Find any commands in the text and log them
             Logger.Log("Checking hypothesis: " + text);
             foreach (string command in keywords.Keys)
                 foreach (string keyword in keywords[command])
-                    if (!foundCommands.Contains(command) && text.Contains(keyword))
+                    if (text.Contains(keyword))
                     {
-                        Logger.Log("Found command " + command);
-                        foundCommands.Add(command);
-                        Logger.Log("Command " + command + " logged");
+                        foundWords.Add(keyword);
+                        if (!foundCommands.Contains(command))
+                        {
+                            Logger.Log("Found command " + command);
+                            foundCommands.Add(command);
+                            Logger.Log("Command " + command + " logged");
+                        }
                     }
+
+            //Display the retrieved text with commands highlighted
+            string textFormatted = "";
+            int lineLen = 0;
+            string wordBuff = "";
+            foreach (string word in text.Split(' '))
+            {
+                wordBuff = word;
+                foreach (string command in foundWords)
+                    if (wordBuff.Contains(command))
+                        wordBuff = wordBuff.Insert(word.IndexOf(command) + command.Length, "</color>")
+                                           .Insert(word.IndexOf(command), "<color=red>");
+                lineLen += word.Length;
+                if (lineLen > 80)
+                {
+                    lineLen = word.Length;
+                    textFormatted += "\n" + wordBuff;
+                }
+                else
+                {
+                    lineLen += 1;
+                    textFormatted += wordBuff + " ";
+                }
+                Logger.Log("WORDBUFF: " + wordBuff);
+            }
+            VocalKnight.dictText.GetComponent<TextMesh>().text = textFormatted;
+            foundWords.Clear();
         }
 
         public void Result(string text, ConfidenceLevel confidence)

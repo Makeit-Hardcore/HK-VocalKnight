@@ -18,6 +18,7 @@ namespace VocalKnight
     public class VocalKnight : Mod
     {
         private RecognizerUtil recognizer;
+        public static GameObject dictText;
         public Dictionary<string, int> Cooldowns = new();
         internal CommandProcessor Processor { get; private set; }
 
@@ -50,6 +51,17 @@ namespace VocalKnight
 
             ObjectLoader.Load(preloadedObjects);
             ObjectLoader.LoadAssets();
+
+            dictText = UObject.Instantiate(GameCameras.instance.gameObject.transform.
+                                           Find("HudCamera/Hud Canvas/Geo Counter/Geo Text").gameObject);
+            UObject.DontDestroyOnLoad(dictText);
+            dictText.name = "dictationTextDisplay";
+            dictText.transform.SetPosition3D(-11.3f, -7.5f, 0.21f);
+            //dictText.transform.localScale.Scale();
+            UObject.Destroy(dictText.GetComponent<PlayMakerFSM>());
+            dictText.GetComponent<TextMesh>().fontSize = 35;
+            dictText.GetComponent<TextMesh>().text = "";
+            dictText.SetActive(true);
 
             Processor = new CommandProcessor();
             Processor.RegisterCommands<Player>();
