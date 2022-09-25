@@ -747,33 +747,33 @@ namespace VocalKnight.Commands
 
         //TODO: Rewrite to only disable, not toggle (can't be giving them abilities they don't have yet)
         [HKCommand("toggle")]
-        [Summary("Toggles an ability for 45 seconds. Options: [dash, superdash, claw, wings, nail, tear, dnail]")]
+        [Summary("Disables an ability. Options: [dash, superdash, claw, wings, nail, tear, dnail]")]
         [Cooldown(15)]
         public IEnumerator ToggleAbility(string ability)
         {
-            const float time = 45;
+            const float time = 15;
 
             PlayerData pd = PlayerData.instance;
 
             switch (ability)
             {
                 case "dash":
-                    yield return PlayerDataUtil.FakeSet(nameof(PlayerData.canDash), pd.canDash ^ true, time);
+                    yield return PlayerDataUtil.FakeSet(nameof(PlayerData.canDash), false, time);
                     break;
                 case "superdash":
-                    yield return PlayerDataUtil.FakeSet(nameof(PlayerData.hasSuperDash), pd.hasSuperDash ^ true, time);
+                    yield return PlayerDataUtil.FakeSet(nameof(PlayerData.hasSuperDash), false, time);
                     break;
                 case "claw":
-                    yield return PlayerDataUtil.FakeSet(nameof(PlayerData.hasWalljump), pd.hasWalljump ^ true, time);
+                    yield return PlayerDataUtil.FakeSet(nameof(PlayerData.hasWalljump), false, time);
                     break;
                 case "wings":
-                    yield return PlayerDataUtil.FakeSet(nameof(PlayerData.hasDoubleJump), pd.hasDoubleJump ^ true, time);
+                    yield return PlayerDataUtil.FakeSet(nameof(PlayerData.hasDoubleJump), false, time);
                     break;
                 case "tear":
-                    yield return PlayerDataUtil.FakeSet(nameof(PlayerData.hasAcidArmour), pd.hasAcidArmour ^ true, time);
+                    yield return PlayerDataUtil.FakeSet(nameof(PlayerData.hasAcidArmour), false, time);
                     break;
                 case "dnail":
-                    yield return PlayerDataUtil.FakeSet(nameof(PlayerData.hasDreamNail), pd.hasDreamNail ^ true, time);
+                    yield return PlayerDataUtil.FakeSet(nameof(PlayerData.hasDreamNail), false, time);
                     break;
                 case "nail":
                     Mirror.SetField(HeroController.instance, "attack_cooldown", 15);

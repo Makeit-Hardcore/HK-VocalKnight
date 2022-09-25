@@ -27,7 +27,7 @@ namespace VocalKnight.Utils
             { "cameffect Mirror", new List<string>() {"mirror","two"} },
             { "cameffect Pixelate", new List<string>() {"old","retro","censor","pixel"} },
             { "cameffect Zoom", new List<string>() {"close","zoom"} },
-            { "ax2uBlind", new List<string>() {"dark","blind","dinilb"} }, //figure out how it reads "blind" backwards
+            { "ax2uBlind", new List<string>() {"dark","blind","daniel"} },
             { "nopogo", new List<string>() {"pogo","down"} },
             { "sleep", new List<string>() {"sleep","tired","drowsy"} },
             { "wind", new List<string>() {"wind","blow","push"} },
@@ -42,22 +42,24 @@ namespace VocalKnight.Utils
             { "hwurmpU", new List<string>() {"cursed","ugly","pretty" } },
             { "walkspeed 4", new List<string>() {"run","sprint"} },
             { "walkspeed 0.5", new List<string>() {"walk","jog"} },
-            { "geo", new List<string>() {"geo","money","coin"} }, //What does the rec thing "geo" sounds like in a sentence?
+            { "geo", new List<string>() {"geo","money","coin"} },
             { "respawn", new List<string>() {"ouch","hurt"} },
-            { "bench", new List<string>() {"bench","rest","spawn"} }, //IMPLEMENT
-            { "die", new List<string>() {"die","dye","death","dead"} }, //IMPLEMENT
+            { "bench", new List<string>() {"bench","rest","spawn"} },
+            { "die", new List<string>() {"die","dye","death","dead"} },
             { "bounce", new List<string>() {"bounce","shroom","fung"} },
             { "gravup", new List<string>() {"up","gravit","top"} },
             { "toggle dash", new List<string>() {"dash"} },
-            { "toggle superdash", new List<string>() {"sea dash"} }, //VERIFY KEYWORD
+            { "toggle superdash", new List<string>() {"heart"} },
             { "toggle claw", new List<string>() {"claw","wall","cling" } },
             { "toggle wings", new List<string>() {"wing","double"} },
-            { "toggle tear", new List<string>() {"isma","tear","acid"} },
+            //{ "toggle tear", new List<string>() {"isma","tear","acid"} }, //NOT WORKING
             { "toggle dnail", new List<string>() {"dream"} },
-            { "toggle nail", new List<string>() {"nail","swing"} },
+            //{ "toggle nail", new List<string>() {"nail","swing"} }, //NOT WORKING
+            //{ "toggle focus", new List<string>() {"focus","heal"} }, //IMPLEMENT
+            //{ "toggle spell", new List<string>() {"spell","shaman","shriek","dive"} }, //IMPLEMENT
             { "doubledamage", new List<string>() {"damage","fragile","weak","week"} },
-            { "zap", new List<string>() {"zap","shock"} },
-            { "jars", new List<string>() {"jar","enemy","collect","trap"} }, //add more potential enemies
+            { "zap", new List<string>() {"zap","shock","volt","electric"} },
+            //{ "jars", new List<string>() {"jar","enemy","collect","trap"} },
             { "purevessel", new List<string>() {"night","vessel","pure","white"} },
             { "revek", new List<string>() {"grave","attack","ninja","protect"} },
             { "shade", new List<string>() {"shade","ghost","regret"} },
@@ -95,8 +97,9 @@ namespace VocalKnight.Utils
             dictRecognizer.DictationResult += Result;
             dictRecognizer.DictationComplete += Completion;
             dictRecognizer.DictationError += Error;
+            dictRecognizer.AutoSilenceTimeoutSeconds = 10f;
+            dictRecognizer.InitialSilenceTimeoutSeconds = 30f;
             dictRecognizer.Start();
-            Logger.Log("Started new DR " + runcount);
         }
 
         public void KillRecognizer()
@@ -111,7 +114,6 @@ namespace VocalKnight.Utils
                 dictRecognizer.DictationResult -= Result;
                 dictRecognizer.DictationComplete -= Completion;
                 dictRecognizer.DictationError -= Error;
-                Logger.Log("About to dispose of DR " + runcount);
                 dictRecognizer.Dispose();
                 dictRecognizer = null;
                 Logger.Log("Disposed of DR " + runcount);
@@ -122,7 +124,6 @@ namespace VocalKnight.Utils
         public void Hypothesis(string text)
         {
             //Find any commands in the text and log them
-            Logger.Log("Checking hypothesis: " + text);
             foreach (string command in keywords.Keys)
                 foreach (string keyword in keywords[command])
                     if (text.Contains(keyword))
@@ -130,9 +131,7 @@ namespace VocalKnight.Utils
                         foundWords.Add(keyword);
                         if (!foundCommands.Contains(command))
                         {
-                            Logger.Log("Found command " + command);
                             foundCommands.Add(command);
-                            Logger.Log("Command " + command + " logged");
                         }
                     }
 
@@ -158,7 +157,6 @@ namespace VocalKnight.Utils
                     lineLen += 1;
                     textFormatted += wordBuff + " ";
                 }
-                Logger.Log("WORDBUFF: " + wordBuff);
             }
             VocalKnight.dictText.GetComponent<TextMesh>().text = textFormatted;
             foundWords.Clear();
@@ -173,7 +171,6 @@ namespace VocalKnight.Utils
 
         public void Completion(DictationCompletionCause cause)
         {
-            Logger.Log("Completed for some reason.");
             switch (cause)
             {
                 case DictationCompletionCause.TimeoutExceeded:

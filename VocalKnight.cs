@@ -2,9 +2,6 @@
 using System;
 using UnityEngine;
 using UObject = UnityEngine.Object;
-using UnityEngine.Windows.Speech;
-using UnityEngine.UIElements;
-using System.Collections;
 using System.Collections.Specialized;
 using System.Collections.Generic;
 using System.Linq;
@@ -52,12 +49,12 @@ namespace VocalKnight
             ObjectLoader.Load(preloadedObjects);
             ObjectLoader.LoadAssets();
 
+            //Initialize captions GameObject
             dictText = UObject.Instantiate(GameCameras.instance.gameObject.transform.
                                            Find("HudCamera/Hud Canvas/Geo Counter/Geo Text").gameObject);
             UObject.DontDestroyOnLoad(dictText);
             dictText.name = "dictationTextDisplay";
             dictText.transform.SetPosition3D(-11.3f, -7.5f, 0.21f);
-            //dictText.transform.localScale.Scale();
             UObject.Destroy(dictText.GetComponent<PlayMakerFSM>());
             dictText.GetComponent<TextMesh>().fontSize = 35;
             dictText.GetComponent<TextMesh>().text = "";

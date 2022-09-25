@@ -9,7 +9,6 @@ using HutongGames.PlayMaker;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 using SFCoreFSM = SFCore.Utils.FsmUtil;
-using Satch = Satchel;
 using UnityEngine.SceneManagement;
 using USceneManager = UnityEngine.SceneManagement.SceneManager;
 using Vasi;
@@ -290,7 +289,8 @@ namespace VocalKnight.Commands
         [Cooldown(5)]
         public  void SpawnShade()
         {
-            Object.Instantiate(GameManager.instance.sm.hollowShadeObject, HeroController.instance.transform.position, Quaternion.identity);
+            GameObject shade = Object.Instantiate(GameManager.instance.sm.hollowShadeObject, HeroController.instance.transform.position, Quaternion.identity);
+            shade.GetComponent<HealthManager>().IsInvincible = true;
         }
 
         [HKCommand("zap")]
