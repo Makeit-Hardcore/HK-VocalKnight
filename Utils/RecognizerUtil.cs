@@ -16,7 +16,7 @@ namespace VocalKnight.Utils
         private static Dictionary<string, List<string>> keywords = new Dictionary<string, List<string>>()
         {
             { "reset", new List<string>() {"reset reset reset"} },
-            { "spikefloor", new List<string>() {"spike","grim","point"} },
+            { "spikefloor", new List<string>() {"spike","point"} },
             { "bees", new List<string>() {"bee","bea","hive"} },
             { "lasers", new List<string>() {"laser","peak","peek"} },
             { "orb", new List<string>() {"orb","sphere","light","lite"} },
@@ -32,7 +32,7 @@ namespace VocalKnight.Utils
             { "sleep", new List<string>() {"sleep","tired","drowsy"} },
             { "wind", new List<string>() {"wind","blow","push"} },
             { "timescale 0.5", new List<string>() {"slow"} },
-            { "timescale 2", new List<string>() {"fast","time"} },
+            { "timescale 2", new List<string>() {"fast"} },
             { "gravity 0.5", new List<string>() {"moon","space","float"} },
             { "gravity 1.9", new List<string>() {"heavy","weight","strong","fat"} },
             { "invertcontrols", new List<string>() {"turn","wrong","damn"} },
@@ -54,23 +54,23 @@ namespace VocalKnight.Utils
             { "toggle wings", new List<string>() {"wing","double"} },
             //{ "toggle tear", new List<string>() {"isma","tear","acid"} }, //NOT WORKING
             { "toggle dnail", new List<string>() {"dream"} },
-            //{ "toggle nail", new List<string>() {"nail","swing"} }, //NOT WORKING
-            //{ "toggle focus", new List<string>() {"focus","heal"} }, //IMPLEMENT
-            //{ "toggle spell", new List<string>() {"spell","shaman","shriek","dive"} }, //IMPLEMENT
+            { "nonail", new List<string>() {"nail","swing"} },
+            { "noheal", new List<string>() {"focus","heal"} },
+            { "nailonly", new List<string>() {"spell","shaman","shriek","dive"} },
             { "doubledamage", new List<string>() {"damage","fragile","weak","week"} },
             { "zap", new List<string>() {"zap","shock","volt","electric"} },
-            //{ "jars", new List<string>() {"jar","enemy","collect","trap"} },
+            { "jars", new List<string>() {"jar","enemy","collect","trap"} },
             { "purevessel", new List<string>() {"night","vessel","pure","white"} },
             { "revek", new List<string>() {"grave","attack","ninja","protect"} },
             { "shade", new List<string>() {"shade","ghost","regret"} },
             { "belfly", new List<string>() {"fly","boom","explode","annoy"} },
             { "enemy marmu", new List<string>() {"marm","cat","ball"} },
-            { "enemy hu", new List<string>() {"who","pancake","flat"} }, //FIX
-            { "enemy gorb", new List<string>() {"brain","ascend"} }, //FIX
-            { "enemy noeyes", new List<string>() {"eye","baby"} }, //FIX
-            { "enemy galien", new List<string>() {"alien","spin"} }, //FIX
-            { "xero", new List<string>() {"0","none","nothing"} }, //FIX
-            { "enemy markoth", new List<string>() {"shield","mark"} }, //FIX
+            //{ "enemy hu", new List<string>() {"who","pancake","flat"} }, //FIX
+            { "gorb", new List<string>() {"brain","ascend"} }, //FIX
+            //{ "enemy noeyes", new List<string>() {"eye","baby"} }, //FIX
+            //{ "enemy galien", new List<string>() {"alien","spin"} }, //FIX
+            { "xero", new List<string>() {"0","none","nothing"} },
+            //{ "enemy markoth", new List<string>() {"shield","mark"} }, //FIX
             { "enemy bigbee", new List<string>() {"big","large"} },
             { "enemy drillbee", new List<string>() {"drill","screw","sting"} },
             { "enemy crystal", new List<string>() {"shoot","crystal"} },
@@ -80,8 +80,12 @@ namespace VocalKnight.Utils
             { "enemy roller", new List<string>() {"roll"} },
             { "enemy angrybuzzer", new List<string>() {"angry","mad","furious"} },
             { "enemy mawlek", new List<string>() {"maw","lick"} },
-            { "enemy aspid", new List<string>() {"spit","primal","triple"} },
-            { "enemy radiance", new List<string>() {"rad","raid","moth","god"} } //FIX
+            { "aspidrancher", new List<string>() {"spit","primal","triple","aspid"} },
+            //{ "enemy radiance", new List<string>() {"rad","raid","moth","god"} }, //FIX
+            { "grimmchild", new List<string>() {"child","kid","grim"} },
+            { "hungry", new List<string>() {"hunger","hungry","food"} },
+            { "charmcurse", new List<string>() {"charm","salubra","equip"} },
+            { "timewarp", new List<string>() {"time","warp","move"} }
         };
         private static int runcount = 0;
 
@@ -97,8 +101,9 @@ namespace VocalKnight.Utils
             dictRecognizer.DictationResult += Result;
             dictRecognizer.DictationComplete += Completion;
             dictRecognizer.DictationError += Error;
-            dictRecognizer.AutoSilenceTimeoutSeconds = 10f;
-            dictRecognizer.InitialSilenceTimeoutSeconds = 30f;
+            //So far changing these variables causes frequent crashing/freezing
+            //dictRecognizer.AutoSilenceTimeoutSeconds = 10f;
+            //dictRecognizer.InitialSilenceTimeoutSeconds = 10f;
             dictRecognizer.Start();
         }
 

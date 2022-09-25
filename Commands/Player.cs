@@ -1,19 +1,22 @@
 using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
+using Rand = System.Random;
 using GlobalEnums;
 using VocalKnight.Entities.Attributes;
 using VocalKnight.ModHelpers;
 using VocalKnight.Precondition;
 using VocalKnight.Utils;
-using HutongGames.PlayMaker;
+using HutongGames.PlayMaker.Actions;
 using Modding;
 using SFCore.Utils;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
 using Vasi;
+using VasiFSM = Vasi.FsmUtil;
 using UObject = UnityEngine.Object;
 
 namespace VocalKnight.Commands
@@ -745,7 +748,6 @@ namespace VocalKnight.Commands
             );
         }
 
-        //TODO: Rewrite to only disable, not toggle (can't be giving them abilities they don't have yet)
         [HKCommand("toggle")]
         [Summary("Disables an ability. Options: [dash, superdash, claw, wings, nail, tear, dnail]")]
         [Cooldown(15)]
@@ -781,6 +783,51 @@ namespace VocalKnight.Commands
             }
         }
 
+        [HKCommand("nailonly")]
+        [Summary("Disables the usage of spells")]
+        [Cooldown(15)]
+        public IEnumerator DisableSpells()
+        {
+            bool OnCanCast(On.HeroController.orig_CanCast orig, HeroController self)
+            {
+                return false;
+            }
+
+            On.HeroController.CanCast += OnCanCast;
+            yield return CoroutineUtil.WaitWithCancel(15f);
+            On.HeroController.CanCast -= OnCanCast;
+        }
+
+        [HKCommand("nonail")]
+        [Summary("Prevents the player from swining the nail")]
+        [Cooldown(15)]
+        public IEnumerator DisableNail()
+        {
+            bool OnCanAttack(On.HeroController.orig_CanAttack orig, HeroController self)
+            {
+                return false;
+            }
+
+            On.HeroController.CanAttack += OnCanAttack;
+            yield return CoroutineUtil.WaitWithCancel(15f);
+            On.HeroController.CanAttack -= OnCanAttack;
+        }
+
+        [HKCommand("noheal")]
+        [Summary("Prevents the player from focusing")]
+        [Cooldown(15)]
+        public IEnumerator DisableFocus()
+        {
+            bool OnCanFocus(On.HeroController.orig_CanFocus orig, HeroController self)
+            {
+                return false;
+            }
+
+            On.HeroController.CanFocus += OnCanFocus;
+            yield return CoroutineUtil.WaitWithCancel(15f);
+            On.HeroController.CanFocus -= OnCanFocus;
+        }
+
         [HKCommand("doubledamage")]
         [Summary("Makes the player take double damage.")]
         [Cooldown(15)]
@@ -790,6 +837,169 @@ namespace VocalKnight.Commands
             ModHooks.TakeDamageHook += InstanceOnTakeDamageHook;
             yield return CoroutineUtil.WaitWithCancel(15f);
             ModHooks.TakeDamageHook -= InstanceOnTakeDamageHook;
+        }
+
+        [HKCommand("hungry")]
+        [Summary("Drains soul constantly, when soul reaches 0, the player takes damage")]
+        [Cooldown(20)]
+        public IEnumerator HungryKnight()
+        {
+            var go = new GameObject();
+            UObject.DontDestroyOnLoad(go);
+            MonoBehaviour runner = go.AddComponent<NonBouncer>();
+            bool flag = true;
+
+            IEnumerator HandleSoul()
+            {
+                while (flag)
+                {
+                    if (!HeroController.instance.controlReqlinquished)
+                    {
+                        if (BossSequenceController.BoundSoul)
+                        {
+                            HeroController.instance.TakeMP(5);
+                        }
+                        else
+                        {
+                            HeroController.instance.TakeMP(11);
+                        }
+                    }
+                    yield return new WaitForSeconds(3f);
+                    if (PlayerData.instance.GetInt("MPCharge") == 0)
+                    {
+                        if (!HeroController.instance.controlReqlinquished)
+                        {
+                            HeroController.instance.TakeDamage(HeroController.instance.gameObject, GlobalEnums.CollisionSide.other, 1, 1);
+                        }
+                        yield return new WaitForSeconds(3f);
+                    }
+                }
+                yield break;
+            }
+
+            runner.StartCoroutine(HandleSoul());
+            yield return CoroutineUtil.WaitWithCancel(20f);
+            runner.StopAllCoroutines();
+        }
+
+        [HKCommand("charmcurse")]
+        [Cooldown(30)]
+        [Summary("Unequips all the player's charms temporarily")]
+        public IEnumerator UnequipCharms()
+        {
+            //Store current charms and unequip them
+            int[] charms = PlayerData.instance.GetVariable<List<int>>(nameof(PlayerData.equippedCharms)).ToArray();
+            bool equipFlag = false;
+
+            void CharmUpdate()
+            {
+                //Custom charm update method to prevent healing the player
+                HeroController hc = HeroController.instance;
+                if (hc.playerData.GetBool("equippedCharm_26"))
+                {
+                    ReflectionHelper.SetField(hc, "nailChargeTime", hc.NAIL_CHARGE_TIME_CHARM);
+                }
+                else
+                {
+                    ReflectionHelper.SetField(hc, "nailChargeTime", hc.NAIL_CHARGE_TIME_DEFAULT);
+                }
+                if (hc.playerData.GetBool("equippedCharm_23") && !hc.playerData.GetBool("brokenCharm_23"))
+                {
+                    hc.playerData.SetInt("maxHealth", hc.playerData.GetInt("maxHealthBase") + 2);
+                }
+                else
+                {
+                    hc.playerData.SetInt("maxHealth", hc.playerData.GetInt("maxHealthBase"));
+                }
+                if (hc.playerData.GetBool("equippedCharm_27"))
+                {
+                    hc.playerData.SetInt("joniHealthBlue", (int)(hc.playerData.GetInt("maxHealth") * 1.4f));
+                    hc.playerData.SetInt("maxHealth", 1);
+                    ReflectionHelper.SetField(hc, "joniBeam", true);
+                }
+                else
+                {
+                    hc.playerData.SetInt("joniHealthBlue", 0);
+                }
+                if (hc.playerData.GetBool("equippedCharm_40") && hc.playerData.GetInt("grimmChildLevel") == 5)
+                {
+                    hc.carefreeShieldEquipped = true;
+                }
+                else
+                {
+                    hc.carefreeShieldEquipped = false;
+                }
+            }
+
+            void CharmsEquipped(PlayerData pd, HeroController hero)
+            {
+                equipFlag = true;
+            }
+
+            foreach (int num in charms)
+            {
+                GameManager.instance.UnequipCharm(num);
+                PlayerData.instance.SetBool("equippedCharm_" + num, false);
+            }
+
+            //Extra stuff to make sure
+            PlayerData.instance.CalculateNotchesUsed();
+            GameManager.instance.RefreshOvercharm();
+
+            CharmUpdate();
+            PlayMakerFSM.BroadcastEvent("CHARM INDICATOR CHECK");
+
+            ModHooks.CharmUpdateHook += CharmsEquipped;
+
+            yield return CoroutineUtil.WaitWithCancel(30f);
+
+            ModHooks.CharmUpdateHook -= CharmsEquipped;
+
+            //New charms were equipped during the wait period, don't re-equip the old ones
+            if (equipFlag) yield break;
+
+            //New charms were NOT equipped, re-equip the old ones
+            foreach (int num in charms)
+            {
+                GameManager.instance.EquipCharm(num);
+                PlayerData.instance.SetBool("equippedCharm_" + num, true);
+            }
+
+            PlayerData.instance.CalculateNotchesUsed();
+            GameManager.instance.RefreshOvercharm();
+
+            CharmUpdate();
+            PlayMakerFSM.BroadcastEvent("CHARM INDICATOR CHECK");
+        }
+
+        [HKCommand("timewarp")]
+        [Summary("Warp the player back to where they were X seconds ago")]
+        [Cooldown(5)]
+        public IEnumerator Timewarp()
+        {
+            PlayMakerFSM dreamnailFSM = HeroController.instance.gameObject.LocateMyFSM("Dream Nail");
+            GameObject flash = VasiFSM.GetAction<SpawnObjectFromGlobalPool>(dreamnailFSM, "Set", 12).gameObject.Value;
+
+            AudioClip audioSet = VasiFSM.GetAction<AudioPlayerOneShotSingle>(dreamnailFSM, "Set", 11).audioClip.Value as AudioClip;
+            AudioClip audioWarp = VasiFSM.GetAction<AudioPlayerOneShotSingle>(dreamnailFSM, "Warp End", 9).audioClip.Value as AudioClip;
+            AudioSource audioSource = HeroController.instance.GetComponent<AudioSource>();
+
+            //Set gate
+            Vector3 position = HeroController.instance.transform.position;
+            string warpScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            audioSource.PlayOneShot(audioSet);
+
+            //Wait
+            yield return new WaitForSeconds(5f);
+
+            //Warp to gate (unless in another scene)
+            HeroController.instance.parryInvulnTimer = 0.6f;
+            yield return new WaitUntil(() => !HeroController.instance.cState.transitioning);
+            if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != warpScene)
+                yield break;
+            HeroController.instance.transform.position = position;
+            UObject.Instantiate(flash, position, Quaternion.identity);
+            audioSource.PlayOneShot(audioWarp);
         }
     }
 }

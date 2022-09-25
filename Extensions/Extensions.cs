@@ -1,6 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using VocalKnight.Commands;
 using UnityEngine;
+using HutongGames.PlayMaker;
+using SFCore;
 
 namespace VocalKnight.Extensions
 {
@@ -15,6 +18,21 @@ namespace VocalKnight.Extensions
         public static GameObject GetChild(this GameObject go, string child)
         {
             return go.transform.Find(child).gameObject;
+        }
+
+        public static void ClearState(this FsmState state)
+        {
+            state.Actions = Array.Empty<FsmStateAction>();
+            state.Transitions = Array.Empty<FsmTransition>();
+        }
+
+        public static void ClearTransitions(this FsmState state)
+        {
+            state.Transitions = Array.Empty<FsmTransition>();
+        }
+        public static void ClearActions(this FsmState state)
+        {
+            state.Actions = Array.Empty<FsmStateAction>();
         }
     }
 }
