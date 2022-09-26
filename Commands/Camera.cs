@@ -37,7 +37,7 @@ namespace VocalKnight.Commands
         private readonly Material _invertMat = new(ObjectLoader.Shaders["Custom/InvertColor"]);
 
         [HKCommand("cameffect")]
-        [Summary("Applies various effects to the camera.\nEffects: Invert, Flip, Nausea, Backwards, Mirror, Pixelate, and Zoom.")]
+        [Summary("Applies various effects to the game camera")] //Effects: Invert, Flip, Nausea, Backwards, Mirror, Pixelate, and Zoom
         [Cooldown(15)]
         public IEnumerator AddEffect(string effect)
         {

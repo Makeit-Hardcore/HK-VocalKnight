@@ -21,7 +21,7 @@ namespace VocalKnight
         internal List<Command> Commands { get; }
         
         private readonly Dictionary<Type, IArgumentParser> _parsers;
-        
+
         private readonly MonoBehaviour _coroutineRunner;
 
         public CommandProcessor()
@@ -30,9 +30,7 @@ namespace VocalKnight
             _parsers = new Dictionary<Type, IArgumentParser>();
 
             var go = new GameObject();
-
             UObject.DontDestroyOnLoad(go);
-
             _coroutineRunner = go.AddComponent<NonBouncer>();
         }
 

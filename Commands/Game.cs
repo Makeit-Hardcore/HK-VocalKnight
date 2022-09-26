@@ -28,21 +28,22 @@ namespace VocalKnight.Commands
         }
 
         [HKCommand("setText")]
-        [Summary("Sets every game text to the text provided.")]
-        [Cooldown(80)]
+        [Summary("Sets all in-game text to a predetermined message")]
+        [Cooldown(30)]
         public IEnumerator Text([RemainingText]string msg)
         {
             string OnLangGet(string key, string title, string orig) => msg;
 
             ModHooks.LanguageGetHook += OnLangGet;
 
-            yield return new WaitForSeconds(20f);
+            yield return new WaitForSeconds(30f);
 
             ModHooks.LanguageGetHook -= OnLangGet;
         }
 
         [HKCommand("reset")]
         [Cooldown(0)]
+        [Summary("Undoes lasting effects. Must say \"Reset Reset Reset\" to activate")]
         public void Reset()
         {
             CoroutineUtil.cancel = true;

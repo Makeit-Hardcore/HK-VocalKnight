@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System;
+using System.Collections;
 using System.Collections.ObjectModel;
 using System.Collections.Generic;
 using UnityEngine;
@@ -10,6 +11,14 @@ namespace VocalKnight.Utils
 	{
 		private DictationRecognizer dictRecognizer;
 
+        private delegate void StatusUpdateHandler(object sender, EventArgs e);
+        private event StatusUpdateHandler statusUpdate;
+
+        public GameObject go;
+        private MonoBehaviour runner;
+        private float timer;
+        private const float timerMax = 20f;
+
 		public static ObservableCollection<string> foundCommands = new ObservableCollection<string>();
         private static List<string> foundWords = new List<string>();
         // Dict{ command, (list of keywords) }
@@ -19,7 +28,7 @@ namespace VocalKnight.Utils
             { "spikefloor", new List<string>() {"spike","point"} },
             { "bees", new List<string>() {"bee","bea","hive"} },
             { "lasers", new List<string>() {"laser","peak","peek"} },
-            { "orb", new List<string>() {"orb","sphere","light","lite"} },
+            { "radiance", new List<string>() {"orb","sphere","light","lite"} },
             { "cameffect Invert", new List<string>() {"switch","invert"} },
             { "cameffect Flip", new List<string>() {"flip"} },
             { "cameffect Nausea", new List<string>() {"blur","wave","dizzy"} },
@@ -33,8 +42,8 @@ namespace VocalKnight.Utils
             { "wind", new List<string>() {"wind","blow","push"} },
             { "timescale 0.5", new List<string>() {"slow"} },
             { "timescale 2", new List<string>() {"fast"} },
-            { "gravity 0.5", new List<string>() {"moon","space","float"} },
-            { "gravity 1.9", new List<string>() {"heavy","weight","strong","fat"} },
+            { "weight 0.5", new List<string>() {"moon","space","float"} },
+            { "weight 1.9", new List<string>() {"heavy","weight","strong","fat"} },
             { "invertcontrols", new List<string>() {"turn","wrong","damn"} },
             { "slippery", new List<string>() {"slip","wet","water","hydrate"} },
             { "nailscale 0.5", new List<string>() {"small","tiny"} },
@@ -48,12 +57,12 @@ namespace VocalKnight.Utils
             { "die", new List<string>() {"die","dye","death","dead"} },
             { "bounce", new List<string>() {"bounce","shroom","fung"} },
             { "gravup", new List<string>() {"up","gravit","top"} },
-            { "toggle dash", new List<string>() {"dash"} },
-            { "toggle superdash", new List<string>() {"heart"} },
-            { "toggle claw", new List<string>() {"claw","wall","cling" } },
-            { "toggle wings", new List<string>() {"wing","double"} },
+            { "disable dash", new List<string>() {"dash"} },
+            { "disable superdash", new List<string>() {"heart"} },
+            { "disable claw", new List<string>() {"claw","wall","cling" } },
+            { "disable wings", new List<string>() {"wing","double"} },
             //{ "toggle tear", new List<string>() {"isma","tear","acid"} }, //NOT WORKING
-            { "toggle dnail", new List<string>() {"dream"} },
+            { "disable dnail", new List<string>() {"dream"} },
             { "nonail", new List<string>() {"nail","swing"} },
             { "noheal", new List<string>() {"focus","heal"} },
             { "nailonly", new List<string>() {"spell","shaman","shriek","dive"} },
@@ -62,7 +71,7 @@ namespace VocalKnight.Utils
             { "jars", new List<string>() {"jar","enemy","collect","trap"} },
             { "purevessel", new List<string>() {"night","vessel","pure","white"} },
             { "revek", new List<string>() {"grave","attack","ninja","protect"} },
-            { "shade", new List<string>() {"shade","ghost","regret"} },
+            //{ "shade", new List<string>() {"shade","ghost","regret"} },
             { "belfly", new List<string>() {"fly","boom","explode","annoy"} },
             { "enemy marmu", new List<string>() {"marm","cat","ball"} },
             //{ "enemy hu", new List<string>() {"who","pancake","flat"} }, //FIX
@@ -85,25 +94,43 @@ namespace VocalKnight.Utils
             { "grimmchild", new List<string>() {"child","kid","grim"} },
             { "hungry", new List<string>() {"hunger","hungry","food"} },
             { "charmcurse", new List<string>() {"charm","salubra","equip"} },
-            { "timewarp", new List<string>() {"time","warp","move"} }
+            { "timewarp", new List<string>() {"time","warp","move"} },
+            { "setText Potty Mouth ", new List<string>() {"****"} }
         };
         private static int runcount = 0;
 
 		public RecognizerUtil()
 		{
+            go = new GameObject();
+            GameObject.DontDestroyOnLoad(go);
+            runner = go.AddComponent<NonBouncer>();
+
+            timer = timerMax;
+            statusUpdate += new StatusUpdateHandler(TimerReset);
+            runner.StartCoroutine(FreezeTimer());
+
+            StartRecognizer();
+        }
+
+        ~RecognizerUtil()
+        {
+            GameObject.Destroy(go);
         }
 
         public void StartRecognizer()
         {
             Logger.Log("Starting new DR " + ++runcount);
             dictRecognizer = new DictationRecognizer();
+
             dictRecognizer.DictationHypothesis += Hypothesis;
             dictRecognizer.DictationResult += Result;
             dictRecognizer.DictationComplete += Completion;
             dictRecognizer.DictationError += Error;
+
             //So far changing these variables causes frequent crashing/freezing
             //dictRecognizer.AutoSilenceTimeoutSeconds = 10f;
-            //dictRecognizer.InitialSilenceTimeoutSeconds = 10f;
+            //dictRecognizer.InitialSilenceTimeoutSeconds = 20f;
+
             dictRecognizer.Start();
         }
 
@@ -128,6 +155,9 @@ namespace VocalKnight.Utils
 
         public void Hypothesis(string text)
         {
+            if (statusUpdate != null)
+                statusUpdate(this, new EventArgs());
+
             //Find any commands in the text and log them
             List<string> kws;
             foreach (string command in keywords.Keys)
@@ -186,6 +216,9 @@ namespace VocalKnight.Utils
 
         public void Completion(DictationCompletionCause cause)
         {
+            if (statusUpdate != null)
+                statusUpdate(this, new EventArgs());
+
             switch (cause)
             {
                 case DictationCompletionCause.TimeoutExceeded:
@@ -213,6 +246,8 @@ namespace VocalKnight.Utils
         public void Error(string error, int hresult)
         {
             Logger.Log("Dictation Error: " + error);
+            KillRecognizer();
+            StartRecognizer();
         }
 
         public static string[] GetCommands()
@@ -220,6 +255,33 @@ namespace VocalKnight.Utils
             string[] commands = new string[keywords.Count];
             keywords.Keys.CopyTo(commands, 0);
             return commands;
+        }
+
+        private void TimerReset(object source, EventArgs e)
+        {
+            timer = timerMax;
+        }
+
+        private IEnumerator FreezeTimer()
+        {
+            while (timer > 0f)
+            {
+                timer -= Time.deltaTime;
+                yield return null;
+            }
+            Logger.LogWarn("Rec timer ran up! Forcefully restarting");
+            
+            //Force a threaded Destruct of the recognizer with the GC, since Dispose() will cause freezing/crash
+            dictRecognizer = null;
+            GC.Collect();
+            yield return null;
+
+            //Allow the recognizer to restart normally
+            StartRecognizer();
+
+            //Recursively restart this coroutine
+            timer = timerMax;
+            yield return FreezeTimer();
         }
     }
 }

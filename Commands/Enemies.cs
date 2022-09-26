@@ -25,6 +25,7 @@ namespace VocalKnight.Commands
     {
         [HKCommand("enemy")]
         [Cooldown(2)]
+        [Summary("Spawns a generic enemy from a preset list")]
         public void SpawnEnemy(string name)
         {
             GameObject enemy = SpawnEnemyGeneric(name);
@@ -35,6 +36,7 @@ namespace VocalKnight.Commands
 
         [HKCommand("xero")]
         [Cooldown(15)]
+        [Summary("Spawns Ghost Warrior Xero")]
         public void SpawnXero()
         {
             GameObject xero = SpawnEnemyGeneric("xero");
@@ -127,8 +129,8 @@ namespace VocalKnight.Commands
         }
 
         [HKCommand("gorb")]
-        [Cooldown(17)]
-        [Summary("Gorb spawns and throws a circle of spikes 3 times")]
+        [Cooldown(17)] //This number is specific such that Gorb is destroyed when he's naturally inactive
+        [Summary("Spawns Ghost Warrior Gorb")]
         public IEnumerator SpawnGorb()
         {
             GameObject gorbGO = SpawnEnemyGeneric("gorb");
@@ -206,6 +208,7 @@ namespace VocalKnight.Commands
 
         [HKCommand("jars")]
         [Cooldown(5)]
+        [Summary("Spawns Collector's jars that contain various generic enemies")]
         public IEnumerator Jars()
         {
             const string path = "_GameCameras/CameraParent/tk2dCamera/SceneParticlesController/town_particle_set/Particle System";
@@ -243,6 +246,7 @@ namespace VocalKnight.Commands
 
         [HKCommand("purevessel")]
         [Cooldown(5)]
+        [Summary("Spawns Pure Vessel")]
         //Adapted from: HollowTwitch mod by Sid-003, fifty-six, and a2659802
         public void SpawnPureVessel()
         {
@@ -299,9 +303,8 @@ namespace VocalKnight.Commands
         }
 
         [HKCommand("revek")]
-        [Summary("Revek attacks the player until hit once")]
+        [Summary("Revek attacks the player until he is hit")]
         [Cooldown(30)]
-        //Adapted from: HollowTwitch mod by Sid-003, fifty-six, and a2659802
         public IEnumerator Revek()
         {
             GameObject revek = UObject.Instantiate
@@ -521,6 +524,7 @@ namespace VocalKnight.Commands
 
         [HKCommand("zap")]
         [Cooldown(15)]
+        [Summary("Electric shocks follow the player")]
         public IEnumerator StartZapping()
         {
             GameObject prefab = ObjectLoader.InstantiableObjects["zap"];
@@ -533,7 +537,7 @@ namespace VocalKnight.Commands
         }
 
         [HKCommand("grimmchild")]
-        [Summary("Spawns a Grimmchild that attacks the player")]
+        [Summary("Spawns a Grimmchild that attacks The Knight")]
         [Cooldown(15)]
         //Adapted from: Challenge Mode mod by Hoo-Knows
         public IEnumerator SpawnGrimmchild()
@@ -590,7 +594,7 @@ namespace VocalKnight.Commands
         }
 
         [HKCommand("aspidrancher")]
-        [Summary("Spawn a primal aspid for every missed nailswing")]
+        [Summary("Spawns one primal aspid for every missed nailswing")]
         [Cooldown(15)]
         //Adapted from: Challenge Mode mod by Hoo-Knows
         public IEnumerator AspidRancher()

@@ -55,7 +55,7 @@ namespace VocalKnight
             }
             if (ToggleMenuRef == null)
             {
-                ToggleMenuRef = new Menu("Toggle Individual Effects", new Element[] { });
+                ToggleMenuRef = new Menu("VocalKnight Effects", new Element[] { });
                 foreach (string command in GS.commandToggles.Keys)
                 {
                     string summary = "";
@@ -92,7 +92,7 @@ namespace VocalKnight
             }
         }
 
-        public override string GetVersion() => "0.5.0";
+        public override string GetVersion() => "0.9.0";
 
         public VocalKnight() : base()
         {
@@ -136,32 +136,17 @@ namespace VocalKnight
             NewRecognizer();
             RecognizerUtil.foundCommands.CollectionChanged += ExecuteCommands;
 
-            kp = new GameObject();
+            /*kp = new GameObject();
             kp.name = "KeyPressDetector";
             UObject.DontDestroyOnLoad(kp);
             kp.AddComponent<KeyPress>();
-
+            */
             Log("Initialized");
         }
 
         public void NewRecognizer()
         {
-            if (recognizer != null) DeleteRecognizer();
-
             recognizer = new RecognizerUtil();
-            recognizer.StartRecognizer();
-        }
-
-        public void ForceNewRecognizer()
-        {
-            recognizer = new RecognizerUtil();
-            recognizer.StartRecognizer();
-        }
-
-        protected void DeleteRecognizer()
-        {
-            recognizer.KillRecognizer();
-            recognizer = null;
         }
 
         private void ExecuteCommands(object sender, NotifyCollectionChangedEventArgs args)
@@ -205,7 +190,7 @@ namespace VocalKnight
         {
             UObject.Destroy(kp);
             UObject.Destroy(dictText);
-            DeleteRecognizer();
+            recognizer = null;
             RecognizerUtil.foundCommands.CollectionChanged -= ExecuteCommands;
         }
 
@@ -221,7 +206,7 @@ namespace VocalKnight
             if (Input.GetKeyUp(KeyCode.R))
             {
                 Logger.Log("Abandoning old Recognizer...");
-                VocalKnight._instance.ForceNewRecognizer();
+                VocalKnight._instance.NewRecognizer();
             }
         }
     }

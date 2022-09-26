@@ -14,7 +14,7 @@ namespace VocalKnight.Commands
     {
         [HKCommand("bees")]
         [Cooldown(5)]
-        [Summary("Hive knight bees.")]
+        [Summary("Hive Knight's bee storm attack")]
         public IEnumerator Bees()
         {
             Vector3 pos;
@@ -59,7 +59,7 @@ namespace VocalKnight.Commands
 
         [HKCommand("belfly")]
         [Cooldown(5)]
-        [Summary("Spawn a couple of the boom bats")]
+        [Summary("Spawns a couple of the boom bats")]
         public IEnumerator Belflies()
         {
             Vector3 pos;
@@ -97,7 +97,7 @@ namespace VocalKnight.Commands
 
         [HKCommand("lasers")]
         [Cooldown(5)]
-        [Summary("Summons crystal peak lasers.")]
+        [Summary("Summons Crystal Peak lasers")]
         public void Lasers()
         {
             Vector3 pos = HeroController.instance.transform.position;
@@ -145,7 +145,7 @@ namespace VocalKnight.Commands
         }
 
         [HKCommand("spikefloor")]
-        [Summary("Spawns nkg spikes.")]
+        [Summary("Spawns NKG spikes from the floor")]
         [Cooldown(10)]
         public IEnumerator SpikeFloor()
         {
@@ -212,9 +212,9 @@ namespace VocalKnight.Commands
             }
         }
 
-        [HKCommand("orb")]
+        [HKCommand("radiance")]
         [Cooldown(1)]
-        [Summary("Spawns an abs orb.")]
+        [Summary("Spawns a set of Radiance orbs")]
         public IEnumerator SpawnAbsOrb()
         {
             if (HeroController.instance == null)
