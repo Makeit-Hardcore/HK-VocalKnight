@@ -190,11 +190,18 @@ namespace VocalKnight
         {
             UObject.Destroy(kp);
             UObject.Destroy(dictText);
+            recognizer.KillRecognizer();
+            recognizer.runner.StopAllCoroutines();
             recognizer = null;
+            GC.Collect();
             RecognizerUtil.foundCommands.CollectionChanged -= ExecuteCommands;
         }
 
-        public void OnLoadGlobal(GSets s) => GS = s;
+        public void OnLoadGlobal(GSets s)
+        {
+            GS = s;
+            GS.UpdateToggles();
+        }
 
         public GSets OnSaveGlobal() => GS;
     }

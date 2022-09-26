@@ -15,7 +15,7 @@ namespace VocalKnight.Utils
         private event StatusUpdateHandler statusUpdate;
 
         public GameObject go;
-        private MonoBehaviour runner;
+        public MonoBehaviour runner;
         private float timer;
         private const float timerMax = 20f;
 
@@ -95,7 +95,9 @@ namespace VocalKnight.Utils
             { "hungry", new List<string>() {"hungry","food","hunger","starv"} },
             { "charmcurse", new List<string>() {"charm","equip","notch"} },
             { "timewarp", new List<string>() {"time","move","warp"} },
-            { "setText Potty Mouth ", new List<string>() {"***","damn"} }
+            { "setText Potty Mouth ", new List<string>() {"***","damn"} },
+            { "jelly", new List<string>() {"jelly","spill","orange","oj"} } //IMPLEMENT
+            //{ "hardcore", new List<string>() {"hardcore","make","mod","creat"} } //IMPLEMENT
         };
         private static int runcount = 0;
 

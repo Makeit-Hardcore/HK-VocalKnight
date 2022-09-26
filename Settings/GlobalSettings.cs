@@ -12,18 +12,28 @@ namespace VocalKnight.Settings
 		public GSets()
         {
 			commandToggles = new Dictionary<string, bool>();
-			List<string> newCommands = new List<string>();
 			foreach (string command in RecognizerUtil.GetCommands())
             {
 				string baseCommand = command.Split(' ')[0];
 				if (!commandToggles.ContainsKey(baseCommand))
 					commandToggles.Add(baseCommand, true);
+            }
+        }
+
+		public void UpdateToggles()
+        {
+			List<string> newCommands = new List<string>();
+			foreach (string command in RecognizerUtil.GetCommands())
+			{
+				string baseCommand = command.Split(' ')[0];
+				if (!commandToggles.ContainsKey(baseCommand))
+					commandToggles.Add(baseCommand, true);
 				if (!newCommands.Contains(baseCommand))
 					newCommands.Add(baseCommand);
-            }
+			}
 			foreach (string oldCommand in commandToggles.Keys)
 				if (!newCommands.Contains(oldCommand))
 					commandToggles.Remove(oldCommand);
-        }
+		}
 	}
 }
