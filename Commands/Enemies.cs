@@ -299,6 +299,7 @@ namespace VocalKnight.Commands
         }
 
         [HKCommand("revek")]
+        [Summary("Revek attacks the player until hit once")]
         [Cooldown(30)]
         //Adapted from: HollowTwitch mod by Sid-003, fifty-six, and a2659802
         public IEnumerator Revek()

@@ -44,6 +44,15 @@ namespace VocalKnight
         public void Execute(string command, ReadOnlyCollection<string> blacklist)
         {
             string[] pieces = command.Split(Seperator);
+
+            if (!VocalKnight.GS.commandToggles.Keys.Contains(pieces[0]))
+                throw new KeyNotFoundException("Requested command " + pieces[0] + " was not found in settings.");
+            if (!VocalKnight.GS.commandToggles[pieces[0]])
+            {
+                Logger.LogWarn("Requested command " + pieces[0] + " is disabled in settings.");
+                return;
+            }
+
             IOrderedEnumerable<Command> found = Commands
                                                 .Where(x => x.Name.Equals(pieces[0], StringComparison.InvariantCultureIgnoreCase))
                                                 .OrderByDescending(x => x.Priority);

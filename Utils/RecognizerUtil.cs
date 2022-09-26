@@ -129,8 +129,17 @@ namespace VocalKnight.Utils
         public void Hypothesis(string text)
         {
             //Find any commands in the text and log them
+            List<string> kws;
             foreach (string command in keywords.Keys)
-                foreach (string keyword in keywords[command])
+            {
+                try
+                {
+                    kws = keywords[command].GetRange(0, VocalKnight.GS.potentialKWs);
+                } catch //ArgumentOutOfRangeException
+                {
+                    kws = keywords[command];
+                }
+                foreach (string keyword in kws)
                     if (text.Contains(keyword))
                     {
                         foundWords.Add(keyword);
@@ -139,6 +148,7 @@ namespace VocalKnight.Utils
                             foundCommands.Add(command);
                         }
                     }
+            }
 
             //Display the retrieved text with commands highlighted
             string textFormatted = "";
@@ -163,7 +173,7 @@ namespace VocalKnight.Utils
                     textFormatted += wordBuff + " ";
                 }
             }
-            VocalKnight.dictText.GetComponent<TextMesh>().text = textFormatted;
+            VocalKnight._instance.dictText.GetComponent<TextMesh>().text = textFormatted;
             foundWords.Clear();
         }
 
@@ -203,6 +213,13 @@ namespace VocalKnight.Utils
         public void Error(string error, int hresult)
         {
             Logger.Log("Dictation Error: " + error);
+        }
+
+        public static string[] GetCommands()
+        {
+            string[] commands = new string[keywords.Count];
+            keywords.Keys.CopyTo(commands, 0);
+            return commands;
         }
     }
 }
