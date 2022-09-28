@@ -98,7 +98,7 @@ namespace VocalKnight.Utils
             { "charmcurse", new List<string>() {"charm","equip","notch"} },
             { "timewarp", new List<string>() {"time","move","warp"} },
             { "setText Potty Mouth ", new List<string>() {"***","damn"} },
-            { "jelly", new List<string>() {"jelly","spill","orange","fog"} } //IMPLEMENT
+            { "jelly", new List<string>() {"jelly","fog","spill","orange"} } //IMPLEMENT
             //{ "hardcore", new List<string>() {"hardcore","make","mod","creat"} } //IMPLEMENT
         };
         private static int runcount = 0;
