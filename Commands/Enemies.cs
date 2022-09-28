@@ -365,6 +365,167 @@ namespace VocalKnight.Commands
             }
         }
 
+        [HKCommand("nightmare")]
+        [Cooldown(5)]
+        [Summary("Summons NKG to perform a random attack")]
+        public void SummonNKG()
+        {
+            string StartState;
+            int attack = 3; //Currently only flame pillars is working properly
+            Logger.Log("Performing attack: " + attack);
+            switch (attack)
+            {
+                case 1: //Dive Dash
+                    Logger.Log("Performing NKG: Dive Dash");
+                    StartState = "AD Pos";
+                    break;
+                case 2: //Fire Bats
+                    Logger.Log("Performing NKG: Fire Bats");
+                    StartState = "FB Hero Pos";
+                    break;
+                case 3: //Flame Pillar
+                    Logger.Log("Performing NKG: Flame Pillar");
+                    StartState = "Pillar Pos";
+                    break;
+                case 4: //Uppercut
+                    Logger.Log("Performing NKG: Uppercut");
+                    StartState = "Slash Tele In";
+                    break;
+                default:
+                    return;
+            }
+
+            GameObject Grimm = SpawnEnemyGeneric("NKG");
+            Grimm.SetActive(true);
+            PlayMakerFSM ctrl = Grimm.LocateMyFSM("Control");
+            Grimm.gameObject.layer = 31; //set to a layer that isnt in GlobalEnums.PhysLayers to avoid collision
+
+            //SFCoreFSM.ChangeFsmTransition(ctrl, "Init", "FINISHED", "Move Choice");
+
+            /*ctrl.GetAction<SendRandomEventV3>("Move Choice", 2).events = new FsmEvent[]
+            {
+                new FsmEvent("FIREBATS"),
+                new FsmEvent("SLASH"),
+                new FsmEvent("AIRDASH"),
+                new FsmEvent("PILLARS")
+            };
+            ctrl.GetAction<SendRandomEventV3>("Move Choice", 2).weights = new FsmFloat[]
+            {
+                1f, 1f, 1f, 1f
+            };
+            ctrl.GetAction<SendRandomEventV3>("Move Choice", 2).trackingInts = new FsmInt[]
+            {
+                SFCoreFSM.GetFsmIntVariable(ctrl, "Ct Firebats"),
+                SFCoreFSM.GetFsmIntVariable(ctrl, "Ct Slash"),
+                SFCoreFSM.GetFsmIntVariable(ctrl, "Ct AirDash"),
+                SFCoreFSM.GetFsmIntVariable(ctrl, "Ct Pillar")
+            };
+            ctrl.GetAction<SendRandomEventV3>("Move Choice", 2).eventMax = new FsmInt[]
+            {
+                2, 3, 2, 1
+            };
+            ctrl.GetAction<SendRandomEventV3>("Move Choice", 2).trackingIntsMissed = new FsmInt[]
+            {
+                SFCoreFSM.GetFsmIntVariable(ctrl, "Ms Firebats"),
+                SFCoreFSM.GetFsmIntVariable(ctrl, "Ms Slash"),
+                SFCoreFSM.GetFsmIntVariable(ctrl, "Ms AirDash"),
+                SFCoreFSM.GetFsmIntVariable(ctrl, "Ms Pillar")
+            };
+            ctrl.GetAction<SendRandomEventV3>("Move Choice", 2).missedMax = new FsmInt[]
+            {
+                5, 4, 5, 5
+            };*/
+            /*SFCoreFSM.ChangeFsmTransition(ctrl, "Move Choice", "SPIKES", "Pillar Pos");
+            SFCoreFSM.ChangeFsmTransition(ctrl, "Move Choice", "BALLOON", "Slash Pos");
+            SFCoreFSM.RemoveFsmAction(ctrl, "Move Choice", 0);
+
+            SFCoreFSM.RemoveFsmTransition(ctrl, "Out Pause", "FINISHED");
+
+            SFCoreFSM.ChangeFsmTransition(ctrl, "Uppercut?", "FINISHED", "Uppercut Antic");
+
+            SFCoreFSM.ChangeFsmTransition(ctrl, "Explode Pause", "FINISHED", "Tele Out");*/
+
+
+            //we will use this as an "idle" state
+            FsmState WaitingForAttackState = SFCoreFSM.CopyFsmState(ctrl, "Dormant", "WaitingForAttack");
+            SFCoreFSM.ChangeFsmTransition(WaitingForAttackState, "WAKE", StartState);
+            SFCoreFSM.ChangeFsmTransition(ctrl.GetState("Tele Out"), "FINISHED", "WaitingForAttack");
+            if (attack == 4)
+            {
+                SFCoreFSM.ChangeFsmTransition(ctrl.GetState("Explode Pause"), "FINISHED", "WaitingForAttacK");
+                SFCoreFSM.ChangeFsmTransition(ctrl.GetState("After Evade"), "FIREBATS", "Slash Antic");
+                SFCoreFSM.ChangeFsmTransition(ctrl.GetState("Auto Evade?"), "EVADE", "Slash Antic");
+                SFCoreFSM.AddFsmTransition(ctrl.GetState("Dormant"), "FINISHED", "Tele Out");
+                ctrl.GetAction<FloatCompare>("After Evade").greaterThan = ctrl.FsmEvents.First(trans => trans.Name == "SLASH");
+            }
+            //ctrl.Fsm.SaveActions();
+
+            UObject.DestroyImmediate(Grimm.LocateMyFSM("constrain_x"));
+            UObject.DestroyImmediate(Grimm.LocateMyFSM("Constrain Y"));
+            UObject.DestroyImmediate(Grimm.LocateMyFSM("Stun"));
+
+            //Grimm.SetActive(true);
+            //ctrl.SetState("Init");
+            Grimm.GetComponent<HealthManager>().hp = Int32.MaxValue;
+            Grimm.GetComponent<HealthManager>().hp = Int32.MaxValue;
+
+            var pos = HeroController.instance.transform.position;
+
+            //ctrl.FsmVariables.FindFsmGameObject("Hero Obj").Value = HeroController.instance.gameObject;
+            //ctrl.FsmVariables.FindFsmGameObject("Self").Value = Grimm;
+
+            switch (attack)
+            {
+                case 1:
+                    ctrl.FsmVariables.FindFsmFloat("Ground Y").Value = pos.y + 2f;
+                    ctrl.FsmVariables.FindFsmFloat("AD Min X").Value = pos.x - 100f;
+                    ctrl.FsmVariables.FindFsmFloat("AD Max X").Value = pos.x + 100f;
+                    ctrl.GetState("AD Tele In").GetAction<SetPosition>().y = pos.y + 10f;
+                    break;
+                case 2:
+                    ctrl.GetState("FB Hero Pos").GetAction<FloatCompare>().float2.Value =
+                        HeroController.instance.transform.position.x + (URandom.value <= 0.5 ? 10f : -10f);
+                    ctrl.FsmVariables.FindFsmFloat("Ground Y").Value = pos.y + 2;
+                    var teleL = ctrl.GetState("FB Tele L");
+                    teleL.GetAction<RandomFloat>().min = pos.x - 7f;
+                    teleL.GetAction<RandomFloat>().max = pos.x - 7f;
+                    var teleR = ctrl.GetState("FB Tele R");
+                    teleR.GetAction<RandomFloat>().min = pos.x + 7f;
+                    teleR.GetAction<RandomFloat>().max = pos.x + 7f;
+                    break;
+                case 3:
+                    ctrl.FsmVariables.FindFsmFloat("Ground Y").Value = pos.y + 2f;
+                    ctrl.FsmVariables.FindFsmFloat("Min X").Value = pos.x - 999f;
+                    ctrl.FsmVariables.FindFsmFloat("Max X").Value = pos.x + 999f;
+                    ctrl.GetState("Pillar Tele In").GetAction<SetPosition>().y = pos.y + 7f;
+                    ctrl.GetState("Pillar").GetAction<SetPosition>().y = pos.y - 1;
+                    break;
+                case 4:
+                    float dir = HeroController.instance.transform.localScale.x;
+                    float num = 7f;
+                    pos += new Vector3(dir * num, 2f, 0f);
+                    ctrl.FsmVariables.FindFsmFloat("Tele X").Value = pos.x;
+                    ctrl.FsmVariables.FindFsmFloat("Ground Y").Value = pos.y;
+                    ctrl.GetState("UP Explode").GetAction<SetPosition>().y.Value = pos.y + 7f;
+                    ctrl.GetAction<FloatCompare>("Uppercut Up", 7).float2.Value = pos.y + 7f;
+                    break;
+                default:
+                    break;
+            }
+
+            var go = new GameObject();
+            MonoBehaviour runner = go.AddComponent<NonBouncer>();
+            runner.StartCoroutine(NKGWaitToDestroy(Grimm, ctrl));
+
+            ctrl.SetState(StartState);
+        }
+
+        private IEnumerator NKGWaitToDestroy(GameObject grimm, PlayMakerFSM ctrl)
+        {
+            yield return new WaitUntil(() => ctrl.ActiveStateName == "WaitingForAttack");
+            UObject.Destroy(grimm);
+        }
+
         [HKCommand("grimmchild")]
         [Summary("Spawns a Grimmchild that attacks The Knight")]
         [Cooldown(15)]
@@ -495,6 +656,122 @@ namespace VocalKnight.Commands
             ModHooks.SlashHitHook -= SlashHitHook;
             runner.StopAllCoroutines();
             UObject.Destroy(go);
+        }
+
+        [HKCommand("sheo")]
+        [Cooldown(5)]
+        [Summary("Summons Paintmaster Sheo to perform an attack")]
+        public void Sheo(string color)
+        {
+            string StartState;
+            switch (color)
+            {
+                case "red":
+                    StartState = "JumpSlash1";
+                    break;
+                case "purple":
+                    StartState = "GSlash Charge";
+                    break;
+                case "blue":
+                    StartState = "Slash Antic";
+                    break;
+                case "yellow":
+                    StartState = "Stab Antic";
+                    break;
+                default:
+                    return;
+            }
+
+            GameObject Sheo = SpawnEnemyGeneric("sheo");
+            Sheo.gameObject.layer = 31;
+            Sheo.SetActive(true);
+
+            PlayMakerFSM nailmaster_sheo = Sheo.LocateMyFSM(nameof(nailmaster_sheo));
+
+            nailmaster_sheo.GetState("Set Paint HP").ClearTransitions();
+
+            var Idle = nailmaster_sheo.GetState("Idle");
+            Idle.Actions = new FsmStateAction[]
+            {
+            Idle.GetAction<Tk2dPlayAnimation>()
+            };
+            Idle.ClearTransitions();
+
+            Idle.AddMethod(() =>
+            {
+                Sheo.GetComponent<MeshRenderer>().enabled = false;
+                Sheo.GetComponent<BoxCollider2D>().enabled = false;
+                Sheo.transform.position = new Vector2(Mathf.Infinity, Mathf.Infinity);
+            });
+
+            if (color == "red")
+            {
+                nailmaster_sheo.GetState(StartState).InsertMethod(0, () =>
+                {
+                    Sheo.SetActive(true);
+                    Sheo.GetComponent<MeshRenderer>().enabled = true;
+                    Sheo.GetComponent<BoxCollider2D>().enabled = true;
+                    var pos = HeroController.instance.transform.position;
+                    Sheo.transform.position = new Vector3(pos.x, pos.y + 10, Sheo.transform.position.z);
+                    Sheo.GetComponent<Rigidbody2D>().gravityScale = 0;
+                });
+
+                nailmaster_sheo.GetState("Dstab").AddAction(new RunEveryFrame()
+                {
+                    MethodToRun = () =>
+                    {
+                        if (Sheo.transform.position.y < HeroController.instance.transform.position.y + 2f)
+                        {
+                            nailmaster_sheo.SetState("Dstab Land");
+                            nailmaster_sheo.GetComponent<Rigidbody2D>().velocity = Vector2.zero;
+                        }
+                    }
+                });
+
+                nailmaster_sheo.GetState("Dstab").GetAction<SetVelocity2d>().y = -60f;
+            } else
+            {
+                nailmaster_sheo.GetState(StartState).InsertMethod(0, () =>
+                {
+                    Sheo.SetActive(true);
+                    Sheo.GetComponent<MeshRenderer>().enabled = true;
+                    Sheo.GetComponent<BoxCollider2D>().enabled = true;
+                    float moveAmount = 12;
+                    var pos = HeroController.instance.transform.position;
+                    float posadder = 0;
+                    if (HeroController.instance.move_input == 0)
+                        posadder += URandom.value < 0.5 ? -moveAmount : moveAmount;
+                    else if (Math.Abs(HeroController.instance.move_input - 1) < Mathf.Epsilon)
+                        posadder += moveAmount;
+                    else if (Math.Abs(HeroController.instance.move_input + 1) < Mathf.Epsilon)
+                        posadder += -moveAmount;
+                    Sheo.transform.position = pos + new Vector3(posadder, 1, 0);
+                });
+            }
+
+            Sheo.GetComponent<MeshRenderer>().enabled = false;
+            Sheo.GetComponent<BoxCollider2D>().enabled = false;
+            Sheo.GetComponent<HealthManager>().hp = Int32.MaxValue;
+            nailmaster_sheo.SetState("Init");
+
+            if (color == "red")
+            {
+                nailmaster_sheo.GetState("JumpSlash1").GetAction<SetPosition>().y = HeroController.instance.transform.position.y + 10;
+                nailmaster_sheo.FsmVariables.FindFsmFloat("Topslash Y").Value =
+                    HeroController.instance.transform.position.y + 10;
+            }
+
+            nailmaster_sheo.SetState(StartState);
+        }
+    }
+
+    public class RunEveryFrame : FsmStateAction
+    {
+        public Action MethodToRun;
+
+        public override void OnUpdate()
+        {
+            MethodToRun();
         }
     }
 }

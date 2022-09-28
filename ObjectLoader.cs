@@ -68,7 +68,6 @@ namespace VocalKnight
                 ("galien", null), ("Deepnest_40", "Warrior/Ghost Warrior Galien")
             },
             {
-                //Map out a max height and have him follow the player
                 ("gorb", null), ("Cliffs_02_boss", "Warrior/Ghost Warrior Slug")
             },
             {
@@ -76,12 +75,16 @@ namespace VocalKnight
                 ("markoth", null), ("Deepnest_East_10", "Warrior/Ghost Warrior Markoth")
             },
             {
-                //He just stands there... menacingly! ... Fix
                 ("xero", null), ("RestingGrounds_02_boss", "Warrior/Ghost Warrior Xero")
             },
             {
-                //Literally perfect in every way
                 ("marmu", null), ("Fungus3_40_boss", "Warrior/Ghost Warrior Marmu")
+            },
+            {
+                ("sheo", null), ("GG_Painter", "Battle Scene/Sheo Boss")
+            },
+            {
+                ("NKG", null), ("GG_Grimm_Nightmare", "Grimm Control/Nightmare Grimm Boss")
             },
             {
                 ("mawlek", null), ("Crossroads_09", "_Enemies/Mawlek Body")

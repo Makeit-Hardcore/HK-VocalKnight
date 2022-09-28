@@ -79,8 +79,13 @@ namespace VocalKnight.Utils
             //{ "enemy galien", new List<string>() {"spin","alien"} }, //FIX
             { "xero", new List<string>() {"0","zero","none","nothing"} },
             //{ "enemy markoth", new List<string>() {"shield","mark"} }, //FIX
+            { "sheo red", new List<string>() {"red","pink","brick","crimson"} },
+            { "sheo purple", new List<string>() {"purple","violet","lavendar","royal"} },
+            { "sheo blue", new List<string>() {"blue","cyan","indigo","deep"} },
+            { "sheo yellow", new List<string>() {"yellow","gold","dandelion","banana"} },
+            { "nightmare", new List<string>() {"grim","fire","bat","flame"} },
             { "enemy bigbee", new List<string>() {"big","large","unit"} },
-            { "enemy drillbee", new List<string>() {"string","screw","drill"} },
+            { "enemy drillbee", new List<string>() {"sting","screw","drill"} },
             { "enemy crystal", new List<string>() {"shoot","crystal"} },
             { "enemy petra", new List<string>() {"disc","blade","petra"} },
             { "enemy sword", new List<string>() {"sword"} },
@@ -93,7 +98,7 @@ namespace VocalKnight.Utils
             { "enemy mawlek", new List<string>() {"maw","lick"} },
             { "aspidrancher", new List<string>() {"spit","primal","triple","aspid"} },
             //{ "enemy radiance", new List<string>() {"god","rad","raid","moth"} }, //FIX
-            { "grimmchild", new List<string>() {"child","kid","grim"} },
+            { "grimmchild", new List<string>() {"child","kid","follow","chase"} },
             { "hungry", new List<string>() {"hungry","food","hunger","starv"} },
             { "charmcurse", new List<string>() {"charm","equip","notch"} },
             { "timewarp", new List<string>() {"time","move","warp"} },
@@ -192,9 +197,20 @@ namespace VocalKnight.Utils
             {
                 wordBuff = word;
                 foreach (string command in foundWords)
-                    if (wordBuff.Contains(command))
-                        wordBuff = wordBuff.Insert(word.IndexOf(command) + command.Length, "</color>")
-                                           .Insert(word.IndexOf(command), "<color=red>");
+                {
+                    if (word.Contains(command))
+                    {
+                        string splitA = "";
+                        string splitB = "";
+                        int lenA = word.IndexOf(command);
+                        if (lenA > 0)
+                            splitA = word.Substring(0, word.IndexOf(command));
+                        int lenB = word.Length - (word.IndexOf(command) + command.Length);
+                        if (lenB > 0)
+                            splitB = word.Substring(word.IndexOf(command) + command.Length, lenB);
+                        wordBuff = splitA + "<color=red>" + command + "</color>" + splitB;
+                    }
+                }
                 lineLen += word.Length;
                 if (lineLen > 80)
                 {
