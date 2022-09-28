@@ -114,6 +114,18 @@ namespace VocalKnight
                 ("angrybuzzer", null), ("Crossroads_05", "Infected Parent/Angry Buzzer")
             },
             {
+                ("jellyfish", null), ("Fungus3_01", "_Enemies/Jellyfish 1")
+            },
+            {
+                ("twister", null), ("Ruins1_30", "Mage")
+            },
+            {
+                ("soldier", null), ("Ruins2_04", "Great Shield Zombie")
+            },
+            {
+                ("kingsmould", null), ("White_Palace_02", "Battle Scene/Royal Gaurd")
+            },
+            {
                 ("prefab_jar", null), ("Ruins2_11", "Break Jar (6)")
             },
             {

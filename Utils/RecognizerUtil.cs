@@ -71,7 +71,6 @@ namespace VocalKnight.Utils
             { "jars", new List<string>() {"trap","jar","collect","enemy"} },
             { "purevessel", new List<string>() {"night","white","pure","vessel"} },
             { "revek", new List<string>() {"grave","attack","ghost","protect"} },
-            //{ "shade", new List<string>() {"shade","regret","chase"} },
             { "belfly", new List<string>() {"fly","explose","annoy","boom"} },
             { "enemy marmu", new List<string>() {"mar","ball","cat"} },
             //{ "enemy hu", new List<string>() {"who","flat","pancake"} }, //FIX
@@ -86,7 +85,10 @@ namespace VocalKnight.Utils
             { "enemy petra", new List<string>() {"disc","blade","petra"} },
             { "enemy sword", new List<string>() {"sword"} },
             { "enemy javelin", new List<string>() {"throw"} },
+            { "enemy soldier", new List<string>() {"great","soldier"} },
+            { "enemy kingsmould", new List<string>() {"king","guard","mold","mould"} },
             { "enemy roller", new List<string>() {"roll"} },
+            //{ "enemy twister", new List<string>() {"twist","mage","sanctum","school"} }, //FIX
             { "enemy angrybuzzer", new List<string>() {"angry","mad","furious"} },
             { "enemy mawlek", new List<string>() {"maw","lick"} },
             { "aspidrancher", new List<string>() {"spit","primal","triple","aspid"} },
@@ -96,7 +98,7 @@ namespace VocalKnight.Utils
             { "charmcurse", new List<string>() {"charm","equip","notch"} },
             { "timewarp", new List<string>() {"time","move","warp"} },
             { "setText Potty Mouth ", new List<string>() {"***","damn"} },
-            { "jelly", new List<string>() {"jelly","spill","orange","oj"} } //IMPLEMENT
+            { "jelly", new List<string>() {"jelly","spill","orange","fog"} } //IMPLEMENT
             //{ "hardcore", new List<string>() {"hardcore","make","mod","creat"} } //IMPLEMENT
         };
         private static int runcount = 0;

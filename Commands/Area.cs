@@ -1,11 +1,14 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 using VocalKnight.Entities.Attributes;
 using VocalKnight.Precondition;
 using VocalKnight.Utils;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
+using UObject = UnityEngine.GameObject;
+using URandom = UnityEngine.Random;
 using Vasi;
 
 namespace VocalKnight.Commands
@@ -29,7 +32,7 @@ namespace VocalKnight.Commands
                 if (HeroController.instance.cState.facingRight) pos.x += 10;
                 else pos.x -= 10;
 
-                GameObject bee = Object.Instantiate
+                GameObject bee = UObject.Instantiate
                 (
                     ObjectLoader.InstantiableObjects["bee"],
                     Vector3.zero,
@@ -43,7 +46,7 @@ namespace VocalKnight.Commands
                 // Set reset vars so they recycle properly
                 ctrl.Fsm.GetFsmFloat("X Left").Value = pos.x - 10;
                 ctrl.Fsm.GetFsmFloat("X Right").Value = pos.x + 10;
-                ctrl.Fsm.GetFsmFloat("Start Y").Value = pos.y + 17 + Random.Range(-3f, 3f);
+                ctrl.Fsm.GetFsmFloat("Start Y").Value = pos.y + 17 + URandom.Range(-3f, 3f);
 
                 // Despawn y
                 ctrl.GetAction<FloatCompare>("Swarm", 3).float2.Value = pos.y - 5f;
@@ -63,7 +66,6 @@ namespace VocalKnight.Commands
         public IEnumerator Belflies()
         {
             Vector3 pos;
-            //RaycastHit2D floorHit;
 
             for (int i = 0; i < 5; i++)
             {
@@ -71,22 +73,15 @@ namespace VocalKnight.Commands
                 if (HeroController.instance.cState.facingRight) pos.x += 5;
                 else pos.x -= 5;
                 pos.y += 5;
-                //floorHit = Physics2D.Raycast(pos, Vector2.down, 500, 1 << 8);
-                //if (floorHit && floorHit.point.y < pos.y)
-                //    pos = floorHit.point;
 
                 if (!ObjectLoader.InstantiableObjects.TryGetValue("belfly", out GameObject go))
                 {
                     Logger.LogError("Could not get GameObject " + "belfly");
                     yield break;
                 }
-                GameObject fly = Object.Instantiate(go, pos, Quaternion.identity);
+                GameObject fly = UObject.Instantiate(go, pos, Quaternion.identity);
                 GameObject.Destroy(fly.GetComponent<PersistentBoolItem>());
                 fly.SetActive(true);
-
-                //Wait for the belfly to reach Idle state
-                //yield return null;
-                //yield return null;
 
                 PlayMakerFSM ctrl = fly.LocateMyFSM("Ceiling Dropper");
                 ctrl.FsmVariables.GetFsmBool("Alert Range").Value = true;
@@ -124,11 +119,11 @@ namespace VocalKnight.Commands
                     turret_pos = up.point + new Vector2(0, -0.5f);
                 }
 
-                GameObject turret = Object.Instantiate
+                GameObject turret = UObject.Instantiate
                 (
                     ObjectLoader.InstantiableObjects["Laser Turret"],
                     turret_pos,
-                    Quaternion.Euler(0, 0, 180 + Random.Range(-30f, 30f))
+                    Quaternion.Euler(0, 0, 180 + URandom.Range(-30f, 30f))
                 );
 
                 turret.LocateMyFSM("Laser Bug").GetState("Init").AddAction
@@ -141,6 +136,82 @@ namespace VocalKnight.Commands
                 );
 
                 turret.SetActive(true);
+            }
+        }
+
+        [HKCommand("jelly")]
+        [Cooldown(15)]
+        [Summary("Fills the room with jellies")]
+        public void SpawnJellies()
+        {
+            CameraController cam = GameCameras.instance.transform.Find("CameraParent/tk2dCamera").gameObject.GetComponent<CameraController>();
+            float buffer = 5f;
+            float jellyBuffer = 10f;
+            bool badPosFlag = false;
+            int maxJellies = (int)Math.Ceiling(cam.sceneWidth * cam.sceneHeight / 400);
+
+            EdgeCollider2D[] tiles = cam.tilemap.renderData.transform.GetChild(0).GetComponentsInChildren<EdgeCollider2D>();
+            PolygonCollider2D[] polyTiles = new PolygonCollider2D[tiles.Length];
+            for (int i = 0; i < tiles.Length; i++)
+            {
+                Vector2[] vertices = tiles[i].points;
+                polyTiles[i] = tiles[i].gameObject.AddComponent<PolygonCollider2D>();
+                polyTiles[i].points = vertices;
+                polyTiles[i].pathCount = 1;
+                polyTiles[i].SetPath(0, vertices);
+                UObject.Destroy(tiles[i]);
+            }
+
+            List<Vector2> jelliesPos = new List<Vector2>();
+
+            Logger.Log("Spawning " + maxJellies + " jellies");
+            for (int j = 0; j < maxJellies; j++)
+            {
+                Vector2 spawnPos = new Vector2();
+
+                for (int spawnAttempt = 0; spawnAttempt <= 50; spawnAttempt++)
+                {
+                    //We tried too many times to place the jelly, just give up
+                    if (spawnAttempt == 50)
+                    {
+                        Logger.LogWarn("Failed to place jelly " + j + " out of " + maxJellies);
+                        return;
+                    }
+
+                    badPosFlag = false;
+                    spawnPos = new Vector2(URandom.Range(buffer, cam.sceneWidth - buffer), URandom.Range(buffer, cam.sceneHeight - buffer));
+                    
+                    //Don't let jellies spawn too close to one another
+                    foreach (Vector2 jellyPos in jelliesPos)
+                    {
+                        if (Vector2.Distance(spawnPos, jellyPos) < jellyBuffer)
+                        {
+                            badPosFlag = true;
+                            break;
+                        }
+                    }
+
+                    if (badPosFlag) continue;
+
+                    //Don't let jellies spawn inside walls or platforms
+                    foreach (PolygonCollider2D tile in polyTiles)
+                    {
+                        if (tile.OverlapPoint(spawnPos))
+                        {
+                            badPosFlag = true;
+                            break;
+                        }
+                    }
+
+                    if (badPosFlag) continue;
+
+                    break;
+                }
+                
+                jelliesPos.Add(spawnPos);
+                GameObject jelly = Enemies.SpawnEnemyGeneric("jellyfish");
+                jelly.transform.position = spawnPos;
+                jelly.SetActive(true);
             }
         }
 
@@ -161,7 +232,7 @@ namespace VocalKnight.Commands
  
             for (int i = -8; i <= 8; i++)
             {
-                GameObject spike = Object.Instantiate(ObjectLoader.InstantiableObjects["nkgspike"]);
+                GameObject spike = UObject.Instantiate(ObjectLoader.InstantiableObjects["nkgspike"]);
 
                 spike.SetActive(true);
 
@@ -208,7 +279,7 @@ namespace VocalKnight.Commands
 
             foreach (GameObject go in spike_fsms.Select(x => x.gameObject))
             {
-                Object.Destroy(go);
+                UObject.Destroy(go);
             }
         }
 
@@ -227,14 +298,14 @@ namespace VocalKnight.Commands
             GameObject ShotCharge_Pre = orbgroup.transform.Find("Shot Charge").gameObject; //get charge effect
             GameObject ShotCharge2_Pre = orbgroup.transform.Find("Shot Charge 2").gameObject;
             
-            GameObject ShotCharge = Object.Instantiate(ShotCharge_Pre);
-            GameObject ShotCharge2 = Object.Instantiate(ShotCharge2_Pre);
+            GameObject ShotCharge = UObject.Instantiate(ShotCharge_Pre);
+            GameObject ShotCharge2 = UObject.Instantiate(ShotCharge2_Pre);
 
 
             for (int i = 0; i < 2; i++)
             {
-                float x = HeroController.instance.transform.position.x + Random.Range(-7f, 8f);
-                float y = HeroController.instance.transform.position.y + Random.Range(4f, 8f);
+                float x = HeroController.instance.transform.position.x + URandom.Range(-7f, 8f);
+                float y = HeroController.instance.transform.position.y + URandom.Range(4f, 8f);
                 var spawnPoint = new Vector3(x, y);
 
                 ShotCharge.transform.position = spawnPoint;
@@ -260,8 +331,8 @@ namespace VocalKnight.Commands
                 em2.enabled = false;
             }
 
-            Object.Destroy(ShotCharge);
-            Object.Destroy(ShotCharge2);
+            UObject.Destroy(ShotCharge);
+            UObject.Destroy(ShotCharge2);
         }
     }
 }

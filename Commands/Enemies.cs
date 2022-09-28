@@ -184,9 +184,8 @@ namespace VocalKnight.Commands
             UObject.Destroy(gorbGO);
         }
 
-        private GameObject SpawnEnemyGeneric(string name)
+        public static GameObject SpawnEnemyGeneric(string name)
         {
-            Logger.Log($"Trying to spawn enemy {name}");
             if (!ObjectLoader.InstantiableObjects.TryGetValue(name, out GameObject go))
             {
                 Logger.LogError("Could not get GameObject " + name);
@@ -352,176 +351,6 @@ namespace VocalKnight.Commands
             USceneManager.activeSceneChanged -= OnLoad;
         }
 
-        //TODO: Remove collider so the player can't pogo off the shade
-        //TODO: Fix spell control (shade currently does not use spells)
-        //TODO: Speed up shade
-        //TODO: Remove shade boundaries(?)
-        //TODO: Honestly, just write a Nemesis mod and incorporate that
-        [HKCommand("shadeBROKEN")]
-        [Cooldown(5)]
-        public void SpawnShade()
-        {
-            var go = new GameObject();
-            MonoBehaviour runner = go.AddComponent<NonBouncer>();
-
-            GameObject shadeGO = UObject.Instantiate(GameManager.instance.sm.hollowShadeObject);
-            shadeGO.transform.position = HeroController.instance.transform.position + 3 * Vector3.left;
-            PlayMakerFSM shadeFSM = shadeGO.LocateMyFSM("Shade Control");
-            shadeGO.SetActive(true);
-
-            bool usingFireball = false;
-            bool usingQuake = false;
-            bool usingScream = false;
-            bool warping = false;
-            bool fireballFacingRight = false;
-
-            IEnumerator SpellControl()
-            {
-                shadeFSM.SetState("Retreat Start");
-                yield return new WaitWhile(() => warping);
-                if (usingFireball) shadeFSM.SetState("Cast Antic");
-                if (usingQuake) shadeFSM.SetState("Quake Antic");
-                if (usingScream) shadeFSM.SetState("Scream Antic");
-                yield break;
-            }
-
-            //Remove jingle
-            SFCoreFSM.RemoveFsmTransition(shadeGO.LocateMyFSM("Play Audio"), "Pause", "FINISHED");
-            SFCoreFSM.RemoveFsmTransition(shadeGO.transform.Find("Music Control").gameObject.LocateMyFSM("Music Control"), "Init", "FINISHED");
-
-            //Remove dreamnail cheese
-            SFCoreFSM.RemoveFsmTransition(shadeGO.LocateMyFSM("Dreamnail Kill"), "Idle", "DREAM IMPACT");
-
-            //Remove spell limit, increase hp, and set spell levels to max
-            SFCoreFSM.InsertMethod(shadeFSM, "Init", () =>
-            {
-                shadeFSM.FsmVariables.FindFsmInt("SP").Value = int.MaxValue;
-                shadeGO.GetComponent<HealthManager>().hp = int.MaxValue;
-                shadeFSM.FsmVariables.FindFsmInt("Fireball Level").Value = 2;
-                shadeFSM.FsmVariables.FindFsmInt("Quake Level").Value = 2;
-                shadeFSM.FsmVariables.FindFsmInt("Scream Level").Value = 2;
-
-            }, 25);
-
-            //Remove roam limit
-            shadeFSM.FsmVariables.FindFsmFloat("Max Roam").Value = 999f;
-
-            //Make shade unfriendly
-            SFCoreFSM.RemoveFsmAction(shadeFSM, "Friendly?", 2);
-
-            //Decrease frequency of random attacks and make them slashes with a delay
-            shadeFSM.GetAction<WaitRandom>("Fly", 5).timeMin = 5f;
-            shadeFSM.GetAction<WaitRandom>("Fly", 5).timeMax = 5f;
-            SFCoreFSM.InsertMethod(shadeFSM, "Quake?", () =>
-            {
-                shadeFSM.SetState("Slash Antic");
-            }, 0);
-
-            //Decrease flight speed
-            shadeFSM.GetAction<ChaseObject>("Fly", 4).speedMax = 1.5f;
-            shadeFSM.GetAction<ChaseObjectV2>("Fly", 6).speedMax = 1.5f;
-
-            //Teleport to different location depending on spell
-            SFCoreFSM.InsertMethod(shadeFSM, "Retreat Start", () =>
-            {
-                warping = true;
-            }, 0);
-            SFCoreFSM.InsertMethod(shadeFSM, "Retreat", () =>
-            {
-                Vector3 position = HeroController.instance.transform.position;
-                if (usingFireball)
-                {
-                    fireballFacingRight = HeroController.instance.cState.facingRight;
-                    if (fireballFacingRight) position += 3f * Vector3.left;
-                    else position += 3f * Vector3.right;
-
-                    if (!HeroController.instance.CheckTouchingGround()) position += 3f * Vector3.down;
-                }
-                else if (usingQuake)
-                {
-                    position += 6f * Vector3.up;
-                }
-                else if (usingScream)
-                {
-                    position += 6f * Vector3.down;
-                }
-                shadeFSM.FsmVariables.FindFsmVector3("Start Pos").Value = position;
-            }, 1);
-            SFCoreFSM.InsertMethod(shadeFSM, "Retreat Reset", () =>
-            {
-                warping = false;
-            }, 3);
-
-            //Make shade face player before using fireball
-            SFCoreFSM.InsertFsmAction(shadeFSM, "Cast Antic", shadeFSM.GetAction<FaceObject>("Fireball Pos", 3), 0);
-
-            //Increase warp speed
-            shadeFSM.GetAction<iTweenMoveTo>("Retreat", 2).time = 0.05f;
-
-            //Increase attack speed
-            shadeFSM.GetAction<Wait>("Cast Antic", 8).time = 0f;
-            shadeFSM.GetAction<Wait>("Quake Antic", 7).time = 0.45f;
-            shadeFSM.GetAction<Wait>("Scream Antic", 6).time = 0f;
-
-            //Reset variables and position after using a spell
-            SFCoreFSM.InsertMethod(shadeFSM, "Cast", () =>
-            {
-                usingFireball = false;
-                RaycastHit2D raycastHit2D = Physics2D.Raycast(shadeGO.transform.position,
-                    fireballFacingRight ? Vector3.right : Vector3.left, 3f, 256);
-                if (raycastHit2D.collider != null)
-                {
-                    shadeFSM.SetState("Retreat Start");
-                }
-            }, 4);
-            SFCoreFSM.InsertMethod(shadeFSM, "Land", () =>
-            {
-                usingQuake = false;
-                shadeFSM.SetState("Retreat Start");
-            }, 11);
-            SFCoreFSM.InsertMethod(shadeFSM, "Scream Recover", () =>
-            {
-                usingScream = false;
-                RaycastHit2D raycastHit2D = Physics2D.Raycast(shadeGO.transform.position, Vector3.up, 6f, 256);
-                if (raycastHit2D.collider != null)
-                {
-                    shadeFSM.SetState("Retreat Start");
-                }
-            }, 2);
-
-            //Detect when player uses a spell
-            PlayMakerFSM spellFSM = HeroController.instance.spellControl;
-            SFCoreFSM.InsertMethod(spellFSM, "Wallside?", () =>
-            {
-                if (usingFireball || usingQuake || usingScream || warping) return;
-                usingFireball = true;
-                runner.StartCoroutine(SpellControl());
-            }, 0);
-            SFCoreFSM.InsertMethod(spellFSM, "On Ground?", () =>
-            {
-                if (usingFireball || usingQuake || usingScream || warping) return;
-                usingQuake = true;
-                runner.StartCoroutine(SpellControl());
-            }, 0);
-            SFCoreFSM.InsertMethod(spellFSM, "Scream Get?", () =>
-            {
-                if (usingFireball || usingQuake || usingScream || warping) return;
-                usingScream = true;
-                runner.StartCoroutine(SpellControl());
-            }, 0);
-
-            runner.StopAllCoroutines();
-
-            SFCoreFSM.RemoveFsmAction(spellFSM, "Wallside?", 0);
-            SFCoreFSM.RemoveFsmAction(spellFSM, "On Ground?", 0);
-            SFCoreFSM.RemoveFsmAction(spellFSM, "Scream Get?", 0);
-        }
-
-        /*{
-        GameObject shade = UObject.Instantiate(GameManager.instance.sm.hollowShadeObject, HeroController.instance.transform.position, Quaternion.identity);
-        shade.GetComponent<HealthManager>().IsInvincible = true;
-    }*/
-
         [HKCommand("zap")]
         [Cooldown(15)]
         [Summary("Electric shocks follow the player")]
@@ -666,6 +495,38 @@ namespace VocalKnight.Commands
             ModHooks.SlashHitHook -= SlashHitHook;
             runner.StopAllCoroutines();
             UObject.Destroy(go);
+        }
+    }
+
+    public class IgnoreTerrain : MonoBehaviour
+    {
+
+        void Start()
+        {
+            if (transform.Find("Terrain Buffer") != null)
+                transform.Find("Terrain Buffer").GetComponent<BoxCollider2D>().enabled = false;
+            // The increased sorting layer should render the sprite in front of terrain
+            if (GetComponent<tk2dSprite>() is tk2dSprite sprite)
+                sprite.SortingOrder = 1;
+        }
+
+        void OnCollisionEnter2D(Collision2D collision)
+        {
+            MonoBehaviour runner = this.gameObject.AddComponent<MonoBehaviour>();
+
+            if (this.gameObject.LocateMyFSM("Shade Control").ActiveStateName != "Quake" && collision.gameObject.layer == 8)
+            {
+                Logger.Log("Collision object: " + collision.gameObject);
+                Physics2D.IgnoreCollision(collision.collider, this.gameObject.GetComponent<BoxCollider2D>(), true);
+                runner.StartCoroutine(waitTurnOnColl(collision));
+            }
+
+        }
+
+        private IEnumerator waitTurnOnColl(Collision2D collision)
+        {
+            yield return new WaitForSeconds(0.5f);
+            Physics2D.IgnoreCollision(collision.collider, this.gameObject.GetComponent<BoxCollider2D>(), false);
         }
     }
 }
