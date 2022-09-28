@@ -497,36 +497,4 @@ namespace VocalKnight.Commands
             UObject.Destroy(go);
         }
     }
-
-    public class IgnoreTerrain : MonoBehaviour
-    {
-
-        void Start()
-        {
-            if (transform.Find("Terrain Buffer") != null)
-                transform.Find("Terrain Buffer").GetComponent<BoxCollider2D>().enabled = false;
-            // The increased sorting layer should render the sprite in front of terrain
-            if (GetComponent<tk2dSprite>() is tk2dSprite sprite)
-                sprite.SortingOrder = 1;
-        }
-
-        void OnCollisionEnter2D(Collision2D collision)
-        {
-            MonoBehaviour runner = this.gameObject.AddComponent<MonoBehaviour>();
-
-            if (this.gameObject.LocateMyFSM("Shade Control").ActiveStateName != "Quake" && collision.gameObject.layer == 8)
-            {
-                Logger.Log("Collision object: " + collision.gameObject);
-                Physics2D.IgnoreCollision(collision.collider, this.gameObject.GetComponent<BoxCollider2D>(), true);
-                runner.StartCoroutine(waitTurnOnColl(collision));
-            }
-
-        }
-
-        private IEnumerator waitTurnOnColl(Collision2D collision)
-        {
-            yield return new WaitForSeconds(0.5f);
-            Physics2D.IgnoreCollision(collision.collider, this.gameObject.GetComponent<BoxCollider2D>(), false);
-        }
-    }
 }
