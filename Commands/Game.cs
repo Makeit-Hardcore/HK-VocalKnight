@@ -30,27 +30,25 @@ namespace VocalKnight.Commands
             Resources.LoadAll("");
 
             //Clips = Resources.FindObjectsOfTypeAll<AudioClip>();
-
-
         }
 
         [HKCommand("setText")]
         [Summary("Sets all in-game text to a predetermined message")]
-        [Cooldown(30)]
+        [Cooldown(CommonVars.cldn * 2)]
         public IEnumerator Text([RemainingText]string msg)
         {
             string OnLangGet(string key, string title, string orig) => msg;
 
             ModHooks.LanguageGetHook += OnLangGet;
 
-            yield return new WaitForSeconds(30f);
+            yield return new WaitForSeconds(CommonVars.cldn * 2);
 
             ModHooks.LanguageGetHook -= OnLangGet;
         }
 
         [HKCommand("reset")]
         [Cooldown(0)]
-        [Summary("Undoes lasting effects. Must say \"Reset Reset Reset\" to activate")]
+        [Summary("Undoes lasting effects. Must say \"Neutralize\" to activate")]
         public void Reset()
         {
             CoroutineUtil.cancel = true;

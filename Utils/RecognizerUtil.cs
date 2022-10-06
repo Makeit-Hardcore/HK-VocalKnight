@@ -17,17 +17,15 @@ namespace VocalKnight.Utils
 
         public GameObject go;
         public MonoBehaviour runner;
-        private static bool controlDisabled = false;
         private float timer;
         private const float timerMax = 20f;
-
-		public static ObservableCollection<string> foundCommands = new ObservableCollection<string>();
+        private static List<string> foundCommands = new List<string>();
         public static bool commandOnCooldown = false;
-        private static List<string> foundWords = new List<string>();
+        
         // Dict{ command, (list of keywords) }
         private static Dictionary<string, List<string>> keywords = new Dictionary<string, List<string>>()
         {
-            { "reset", new List<string>() {"reset reset reset"} },
+            { "reset", new List<string>() {"neutralize"} },
             { "spikefloor", new List<string>() {"point","spike"} },
             { "bees", new List<string>() {"bee","bea","hive"} },
             { "lasers", new List<string>() {"peak","peek","laser"} },
@@ -162,68 +160,77 @@ namespace VocalKnight.Utils
             if (statusUpdate != null)
                 statusUpdate(this, new EventArgs());
 
-            //if (controlDisabled) return;
+            VocalKnight.Instance.dictText.GetComponent<TextMesh>().text = text;
+        }
 
-            //Conditions where we don't want commands to execute
-            /*if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "Menu_Title")
-                return;
-            if (UIManager.instance.transform.Find("UICanvas/ModalDimmer").gameObject.activeSelf)
-                return;
-            if (GameManager.instance.IsGamePaused()) return;*/
+        public void Result(string text, ConfidenceLevel confidence)
+        {
+            Logger.Log("Result: " + text);
 
-            //Find any commands in the text and log them
-            List<string> kws;
-            foreach (string command in keywords.Keys)
-            {
-                try
-                {
-                    kws = keywords[command].GetRange(0, VocalKnight.GS.potentialKWs);
-                } catch //ArgumentOutOfRangeException
-                {
-                    kws = keywords[command];
-                }
-                foreach (string keyword in kws)
-                    if (text.Contains(keyword))
-                    {
-                        foundWords.Add(keyword);
-                        if (!foundCommands.Contains(command))
-                        {
-                            foundCommands.Add(command);
-                        }
-                    }
-            }
-
-            //Display the retrieved text with commands highlighted
             string textFormatted = "";
             int lineLen = 0;
-            string wordBuff = "";
+            List<string> kws;
             foreach (string word in text.Split(' '))
             {
-                wordBuff = word;
-                foreach (string command in foundWords)
+                string wordBuff = "";
+                if (HeroController.instance != null && HeroController.instance.CanInput())
                 {
-                    if (word.Contains(command))
+                    foreach (string command in keywords.Keys)
                     {
-                        string splitA = "";
-                        string splitB = "";
-                        
-                        int lenA = word.IndexOf(command);
-                        if (lenA > 0)
-                            splitA = word.Substring(0, word.IndexOf(command));
-                        
-                        int lenB = word.Length - (word.IndexOf(command) + command.Length);
-                        if (lenB > 0)
-                            splitB = word.Substring(word.IndexOf(command) + command.Length, lenB);
-                        
-                        if (commandOnCooldown)
-                        {
-                            wordBuff = splitA + "<color=blue>" + command + "</color>" + splitB;
+                        if (foundCommands.Contains(command)) continue;
 
+                        bool found = false;
+
+                        //Get our list of potential keywords
+                        try
+                        {
+                            kws = keywords[command].GetRange(0, VocalKnight.GS.potentialKWs);
                         }
-                        else
-                            wordBuff = splitA + "<color=red>" + command + "</color>" + splitB;
+                        catch //ArgumentOutOfRangeException
+                        {
+                            kws = keywords[command];
+                        }
+
+                        //Try to match those keywords to the current word
+                        foreach (string keyword in kws)
+                        {
+                            if (word.Contains(keyword))
+                            {
+                                found = true;
+                                Logger.Log("Executing command: " + command);
+                                VocalKnight.Instance.Processor.Execute(command, null);
+
+                                string splitA = "";
+                                string splitB = "";
+
+                                int lenA = word.IndexOf(keyword);
+                                if (lenA > 0)
+                                    splitA = word.Substring(0, word.IndexOf(keyword));
+
+                                int lenB = word.Length - (word.IndexOf(keyword) + keyword.Length);
+                                if (lenB > 0)
+                                    splitB = word.Substring(word.IndexOf(keyword) + keyword.Length, lenB);
+
+                                if (commandOnCooldown)
+                                    wordBuff = splitA + "<color=cyan>" + keyword + "</color>" + splitB;
+                                else
+                                    wordBuff = splitA + "<color=red>" + keyword + "</color>" + splitB;
+
+                                commandOnCooldown = false;
+                                break;
+                            }
+                        }
+
+                        if (found)
+                        {
+                            foundCommands.Add(command);
+                            break;
+                        }
                     }
                 }
+
+                if (wordBuff == "") wordBuff = word;
+
                 lineLen += word.Length;
                 if (lineLen > 80)
                 {
@@ -233,14 +240,8 @@ namespace VocalKnight.Utils
                 lineLen += 1;
                 textFormatted += wordBuff + " ";
             }
-            VocalKnight.Instance.dictText.GetComponent<TextMesh>().text = textFormatted;
-            foundWords.Clear();
-        }
 
-        public void Result(string text, ConfidenceLevel confidence)
-        {
-            Logger.Log("Result: " + text);
-            Hypothesis(text);
+            VocalKnight.Instance.dictText.GetComponent<TextMesh>().text = textFormatted;
             foundCommands.Clear();
         }
 

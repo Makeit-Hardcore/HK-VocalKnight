@@ -145,7 +145,6 @@ namespace VocalKnight
             On.HeroController.Awake += OnHeroControllerAwake;
 
             NewRecognizer();
-            RecognizerUtil.foundCommands.CollectionChanged += ExecuteCommands;
 
             /*kp = new GameObject();
             kp.name = "KeyPressDetector";
@@ -163,18 +162,6 @@ namespace VocalKnight
         private void CancelEffects()
         {
             CoroutineUtil.cancel = true;
-        }
-
-        private void ExecuteCommands(object sender, NotifyCollectionChangedEventArgs args)
-        {
-            if (args.NewItems != null)
-            {
-                foreach (string command in args.NewItems)
-                {
-                    Logger.Log("Executing command: " + command);
-                    Processor.Execute(command, null);
-                }
-            }
         }
 
         private void ConfigureCooldowns()
@@ -271,7 +258,6 @@ namespace VocalKnight
             GC.Collect();
             UObject.Destroy(HeroController.instance.GetComponent<Emoter>());
             ModHooks.AfterPlayerDeadHook -= CancelEffects;
-            RecognizerUtil.foundCommands.CollectionChanged -= ExecuteCommands;
             On.HeroController.Awake -= OnHeroControllerAwake;
         }
 
