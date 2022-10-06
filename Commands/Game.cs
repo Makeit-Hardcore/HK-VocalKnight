@@ -1,5 +1,7 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using VocalKnight.Entities.Attributes;
 using VocalKnight.Precondition;
 using VocalKnight.Utils;
@@ -9,6 +11,7 @@ using Modding;
 using MonoMod.RuntimeDetour;
 using On.HutongGames.PlayMaker.Actions;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using Random = UnityEngine.Random;
 using UObject = UnityEngine.Object;
 
@@ -19,12 +22,16 @@ namespace VocalKnight.Commands
     {
         internal static AudioClip[] Clips { get; private set; } = Resources.FindObjectsOfTypeAll<AudioClip>();
 
+        private bool partyFlag;
+
         public Game()
         {
             // Just for the side effects.
             Resources.LoadAll("");
 
             //Clips = Resources.FindObjectsOfTypeAll<AudioClip>();
+
+
         }
 
         [HKCommand("setText")]
@@ -47,6 +54,7 @@ namespace VocalKnight.Commands
         public void Reset()
         {
             CoroutineUtil.cancel = true;
+            partyFlag = true;
         }
 
         [HKCommand("heal")]
@@ -179,5 +187,93 @@ namespace VocalKnight.Commands
 
             self.clip = orig_clip;
         }
+
+        [HKCommand("party")]
+        [Cooldown(15f)]
+        [Summary("Initiates party time")]
+        public IEnumerator PartyTime()
+        {
+            var go = new GameObject();
+            MonoBehaviour runner = go.AddComponent<NonBouncer>();
+            partyFlag = false;
+
+            void SceneChanged(Scene oldScene, Scene newScene) => partyFlag = true;
+            void PlayerDied() => partyFlag = true;
+            int TookDamage(int damage)
+            {
+                partyFlag = true;
+                return damage;
+            }
+
+            UnityEngine.SceneManagement.SceneManager.activeSceneChanged += SceneChanged;
+            ModHooks.AfterPlayerDeadHook += PlayerDied;
+            ModHooks.TakeHealthHook += TookDamage;
+
+            HueShifter.ZFrequency = 100f;
+            HueShifter.TimeFrequency = 100f;
+            HueShifter.SetAllTheShaders();
+            AudioSource bgm = GameManager.instance.transform.Find("AudioManager/Music/Main").gameObject.GetComponent<AudioSource>();
+            AudioClip bgm_orig = bgm.clip;
+            bgm.PlayOneShot(VocalKnight.customAudio["Funky Dealer"]);
+
+            runner.StartCoroutine(TimedAction(15f, () =>
+            {
+                bgm.clip = bgm_orig;
+                bgm.Play();
+                partyFlag = true;
+            }));
+            while (!partyFlag)
+                yield return HeroController.instance.GetComponent<Emoter>().Emote();
+
+            HueShifter.SetDefaults();
+            UnityEngine.SceneManagement.SceneManager.activeSceneChanged -= SceneChanged;
+            ModHooks.AfterPlayerDeadHook -= PlayerDied;
+            ModHooks.TakeHealthHook -= TookDamage;
+        }
+
+        private IEnumerator TimedAction(float waitTime, Action ThingtoDo)
+        {
+            yield return CoroutineUtil.WaitWithCancel(waitTime);
+            ThingtoDo();
+        }
+    }
+
+    public class Emoter : MonoBehaviour
+    {
+        private void Awake()
+        {
+            this._anim = HeroController.instance.gameObject.GetComponent<tk2dSpriteAnimator>();
+        }
+
+        private void Start()
+        {
+            tk2dSpriteCollectionData collection = HeroController.instance.GetComponent<tk2dSprite>().Collection;
+            List<tk2dSpriteDefinition> list = collection.spriteDefinitions.ToList<tk2dSpriteDefinition>();
+            foreach (tk2dSpriteDefinition tk2dSpriteDefinition in VocalKnight.EmotesBundle.LoadAsset<GameObject>("EmotesCollection").GetComponent<tk2dSpriteCollection>().spriteCollection.spriteDefinitions)
+            {
+                tk2dSpriteDefinition.material.shader = list[0].material.shader;
+                list.Add(tk2dSpriteDefinition);
+            }
+            collection.spriteDefinitions = list.ToArray();
+            List<tk2dSpriteAnimationClip> list2 = this._anim.Library.clips.ToList<tk2dSpriteAnimationClip>();
+            foreach (tk2dSpriteAnimationClip item in VocalKnight.EmotesBundle.LoadAsset<GameObject>("EmotesAnim").GetComponent<tk2dSpriteAnimation>().clips)
+            {
+                list2.Add(item);
+            }
+            this._anim.Library.clips = list2.ToArray();
+        }
+
+        public IEnumerator Emote()
+        {
+            HeroController.instance.RelinquishControl();
+            HeroController.instance.StopAnimationControl();
+            this._anim.Play("Dab");
+            yield return new WaitWhile(() => this._anim.IsPlaying("Dab"));
+            HeroController.instance.RegainControl();
+            HeroController.instance.StartAnimationControl();
+            yield break;
+        }
+
+        private tk2dSpriteAnimator _anim;
     }
 }

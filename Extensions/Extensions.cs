@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
 using VocalKnight.Commands;
 using UnityEngine;
@@ -33,6 +34,18 @@ namespace VocalKnight.Extensions
         public static void ClearActions(this FsmState state)
         {
             state.Actions = Array.Empty<FsmStateAction>();
+        }
+
+        public static byte[] ReadAllBytes(this Stream instream)
+        {
+            if (instream is MemoryStream memStream)
+                return memStream.ToArray();
+
+            using (var memoryStream = new MemoryStream())
+            {
+                instream.CopyTo(memoryStream);
+                return memoryStream.ToArray();
+            }
         }
     }
 }

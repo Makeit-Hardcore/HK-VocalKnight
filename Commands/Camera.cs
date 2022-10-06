@@ -38,10 +38,10 @@ namespace VocalKnight.Commands
 
         [HKCommand("cameffect")]
         [Summary("Applies various effects to the game camera")] //Effects: Invert, Flip, Nausea, Backwards, Mirror, Pixelate, and Zoom
-        [Cooldown(15)]
+        [Cooldown(CommonVars.cldn)]
         public IEnumerator AddEffect(string effect)
         {
-            const float time = 15f;
+            const float time = CommonVars.cldn;
 
             CameraEffects camEffect;
 

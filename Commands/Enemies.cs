@@ -35,7 +35,7 @@ namespace VocalKnight.Commands
         }
 
         [HKCommand("xero")]
-        [Cooldown(15)]
+        [Cooldown(CommonVars.cldn)]
         [Summary("Spawns Ghost Warrior Xero")]
         public void SpawnXero()
         {
@@ -193,10 +193,17 @@ namespace VocalKnight.Commands
             }
             Vector3 position = HeroController.instance.gameObject.transform.position;
             position.y += 5;
+            if (HeroController.instance.cState.facingRight)
+                position.x += 5;
+            else
+                position.x -= 5;
             GameObject enemy = UObject.Instantiate(go, position, Quaternion.identity);
 
             //For enemies that do not typically respawn until bench
             UObject.Destroy(enemy.GetComponent<PersistentBoolItem>());
+
+            //Reduce enemy health
+            enemy.GetComponent<HealthManager>().hp /= 4;
 
             //Killing a spawned ghost warrior does not count as defeating the real deal
             if (enemy.name.Contains("Ghost Warrior"))
@@ -206,7 +213,7 @@ namespace VocalKnight.Commands
         }
 
         [HKCommand("jars")]
-        [Cooldown(5)]
+        [Cooldown(CommonVars.cldn)]
         [Summary("Spawns Collector's jars that contain various generic enemies")]
         public IEnumerator Jars()
         {
@@ -244,9 +251,8 @@ namespace VocalKnight.Commands
         }
 
         [HKCommand("purevessel")]
-        [Cooldown(5)]
+        [Cooldown(CommonVars.cldn)]
         [Summary("Spawns Pure Vessel")]
-        //Adapted from: HollowTwitch mod by Sid-003, fifty-six, and a2659802
         public void SpawnPureVessel()
         {
             // stolen from https://github.com/SalehAce1/PathOfPureVessel
@@ -352,7 +358,7 @@ namespace VocalKnight.Commands
         }
 
         [HKCommand("zap")]
-        [Cooldown(15)]
+        [Cooldown(CommonVars.cldn)]
         [Summary("Electric shocks follow the player")]
         public IEnumerator StartZapping()
         {
@@ -366,7 +372,7 @@ namespace VocalKnight.Commands
         }
 
         [HKCommand("nightmare")]
-        [Cooldown(5)]
+        [Cooldown(CommonVars.cldn)]
         [Summary("Summons NKG to perform a random attack")]
         public void SummonNKG()
         {
@@ -528,7 +534,7 @@ namespace VocalKnight.Commands
 
         [HKCommand("grimmchild")]
         [Summary("Spawns a Grimmchild that attacks The Knight")]
-        [Cooldown(15)]
+        [Cooldown(CommonVars.cldn * 2)]
         //Adapted from: Challenge Mode mod by Hoo-Knows
         public IEnumerator SpawnGrimmchild()
         {
@@ -578,14 +584,14 @@ namespace VocalKnight.Commands
                 SFCoreFSM.InsertFsmAction(grimmballFSM, "Impact", grimmballFSM.GetAction<SetCircleCollider>("Shrink", 3), 0);
             }, 10);
 
-            yield return CoroutineUtil.WaitWithCancel(15f);
+            yield return CoroutineUtil.WaitWithCancel(CommonVars.cldn * 2);
             
             UObject.Destroy(grimmchildGO);
         }
 
         [HKCommand("aspidrancher")]
         [Summary("Spawns one primal aspid for every missed nailswing")]
-        [Cooldown(15)]
+        [Cooldown(CommonVars.cldn * 2)]
         //Adapted from: Challenge Mode mod by Hoo-Knows
         public IEnumerator AspidRancher()
         {
@@ -651,7 +657,7 @@ namespace VocalKnight.Commands
 
             ModHooks.AfterAttackHook += AfterAttackHook;
             ModHooks.SlashHitHook += SlashHitHook;
-            yield return CoroutineUtil.WaitWithCancel(15f);
+            yield return CoroutineUtil.WaitWithCancel(CommonVars.cldn * 2);
             ModHooks.AfterAttackHook -= AfterAttackHook;
             ModHooks.SlashHitHook -= SlashHitHook;
             runner.StopAllCoroutines();
@@ -659,7 +665,7 @@ namespace VocalKnight.Commands
         }
 
         [HKCommand("sheo")]
-        [Cooldown(5)]
+        [Cooldown(CommonVars.cldn)]
         [Summary("Summons Paintmaster Sheo to perform an attack")]
         public void Sheo(string color)
         {

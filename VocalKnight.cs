@@ -5,10 +5,13 @@ using UObject = UnityEngine.Object;
 using System.Collections.Specialized;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
+using System.Reflection;
 using Satchel.BetterMenus;
 using VocalKnight.Commands;
 using VocalKnight.Entities;
 using VocalKnight.Entities.Attributes;
+using VocalKnight.Extensions;
 using VocalKnight.Precondition;
 using VocalKnight.Utils;
 using VocalKnight.Settings;
@@ -23,6 +26,9 @@ namespace VocalKnight
         private static bool preloadFlag = false;
         public Dictionary<string, int> Cooldowns = new();
         internal CommandProcessor Processor { get; private set; }
+        public static AssetBundle EmotesBundle;
+        public static AssetBundle HueShiftBundle;
+        public static Dictionary<string, AudioClip> customAudio = new Dictionary<string, AudioClip>();
         private Menu MenuRef, ToggleMenuRef;
         public static GSets GS { get; set; } = new GSets();
 
@@ -78,7 +84,7 @@ namespace VocalKnight
             return MenuRef.GetMenuScreen(modListMenu);
         }
 
-        public static VocalKnight? _instance;
+        private static VocalKnight? _instance;
 
         public static VocalKnight Instance
         {
@@ -118,6 +124,8 @@ namespace VocalKnight
                 Processor.RegisterCommands<Game>();
 
                 ConfigureCooldowns();
+                LoadAssets();
+                HueShifter.LoadAssets();
 
                 preloadFlag = true;
             }
@@ -133,6 +141,9 @@ namespace VocalKnight
             dictText.GetComponent<TextMesh>().text = "";
             dictText.SetActive(true);
 
+            ModHooks.AfterPlayerDeadHook += CancelEffects;
+            On.HeroController.Awake += OnHeroControllerAwake;
+
             NewRecognizer();
             RecognizerUtil.foundCommands.CollectionChanged += ExecuteCommands;
 
@@ -147,6 +158,11 @@ namespace VocalKnight
         public void NewRecognizer()
         {
             recognizer = new RecognizerUtil();
+        }
+
+        private void CancelEffects()
+        {
+            CoroutineUtil.cancel = true;
         }
 
         private void ExecuteCommands(object sender, NotifyCollectionChangedEventArgs args)
@@ -186,6 +202,65 @@ namespace VocalKnight
             }
         }
 
+        private void LoadAssets()
+        {
+            Dictionary<string, AssetBundle> _emoteBundles = new Dictionary<string, AssetBundle>();
+            Dictionary<string, AssetBundle> _hueBundles = new Dictionary<string, AssetBundle>();
+
+            var platform = Application.platform switch
+            {
+                RuntimePlatform.LinuxPlayer => "linux",
+                RuntimePlatform.WindowsPlayer => "windows",
+                RuntimePlatform.OSXPlayer => "osx",
+                _ => throw new PlatformNotSupportedException("What platform are you even on??")
+            };
+
+            Assembly executingAssembly = Assembly.GetExecutingAssembly();
+            foreach (string text in executingAssembly.GetManifestResourceNames())
+            {
+                using (Stream manifestResourceStream = executingAssembly.GetManifestResourceStream(text))
+                {
+                    bool flag = manifestResourceStream != null;
+                    if (flag)
+                    {
+                        string key = Path.GetExtension(text).Substring(1);
+                        if (key.Contains("emotes"))
+                            _emoteBundles[key] = AssetBundle.LoadFromStream(manifestResourceStream);
+                        else if (key == "wav")
+                        {
+                            AudioClip audio = WavUtility.ToAudioClip(manifestResourceStream.ReadAllBytes(), text.Split('.')[2]);
+                            customAudio.Add(audio.name, audio);
+                        }
+                        Logger.Log("Loaded new resource: " + text);
+                    }
+                }
+            }
+
+            HueShiftBundle = AssetBundle.LoadFromStream(
+                typeof(HueShifter).Assembly.GetManifestResourceStream(
+                $"VocalKnight.Resources.AssetBundles.hueshiftshaders-{platform}"));
+
+            switch (SystemInfo.operatingSystemFamily)
+            {
+                case (OperatingSystemFamily)1:
+                    EmotesBundle = _emoteBundles["emotesmac"];
+                    break;
+                case (OperatingSystemFamily)2:
+                    EmotesBundle = _emoteBundles["emoteswin"];
+                    break;
+                case (OperatingSystemFamily)3:
+                    EmotesBundle = _emoteBundles["emoteslin"];
+                    break;
+            }
+        }
+
+
+        private void OnHeroControllerAwake(On.HeroController.orig_Awake orig, HeroController self)
+        {
+            orig.Invoke(self);
+            self.gameObject.AddComponent<Emoter>();
+        }
+
         public void Unload()
         {
             UObject.Destroy(kp);
@@ -194,7 +269,10 @@ namespace VocalKnight
             recognizer.runner.StopAllCoroutines();
             recognizer = null;
             GC.Collect();
+            UObject.Destroy(HeroController.instance.GetComponent<Emoter>());
+            ModHooks.AfterPlayerDeadHook -= CancelEffects;
             RecognizerUtil.foundCommands.CollectionChanged -= ExecuteCommands;
+            On.HeroController.Awake -= OnHeroControllerAwake;
         }
 
         public void OnLoadGlobal(GSets s)
@@ -212,8 +290,8 @@ namespace VocalKnight
         {
             if (Input.GetKeyUp(KeyCode.R))
             {
-                Logger.Log("Abandoning old Recognizer...");
-                VocalKnight._instance.NewRecognizer();
+                Logger.Log("HeroController acceptingInput: " + HeroController.instance.CanInput());
+                //VocalKnight.Instance.NewRecognizer();
             }
         }
     }

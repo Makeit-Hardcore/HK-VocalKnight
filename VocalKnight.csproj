@@ -343,7 +343,11 @@
         <None Include="LocalOverrides.targets" />
     </ItemGroup>
 
-    <ItemGroup>
-      <PackageReference Include="DeepSpeech" Version="0.9.3" />
-    </ItemGroup>
+	<ItemGroup>
+		<EmbeddedResource Include="AssetBundles.emoteslin" />
+		<EmbeddedResource Include="AssetBundles.emotesmac" />
+		<EmbeddedResource Include="AssetBundles.emoteswin" />
+		<EmbeddedResource Include="AudioFiles/*" />
+		<EmbeddedResource Include="Resources/**/*" />
+	</ItemGroup>
 </Project>

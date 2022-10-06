@@ -15,4 +15,9 @@ namespace VocalKnight.Entities.Attributes
         }
     }
 
+    public static class CommonVars
+    {
+        public const float cldn = 7.5f;
+    }
+
 }

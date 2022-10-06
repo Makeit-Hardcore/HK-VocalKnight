@@ -8,6 +8,7 @@ using System.Reflection;
 using VocalKnight.Entities;
 using VocalKnight.Entities.Attributes;
 using VocalKnight.Precondition;
+using VocalKnight.Utils;
 using UnityEngine;
 using UObject = UnityEngine.Object;
 
@@ -41,6 +42,9 @@ namespace VocalKnight
 
         public void Execute(string command, ReadOnlyCollection<string> blacklist)
         {
+            //Only run effects if the player is in control of The Knight
+            if (HeroController.instance == null || !HeroController.instance.CanInput()) return;
+
             string[] pieces = command.Split(Seperator);
 
             if (!VocalKnight.GS.commandToggles.Keys.Contains(pieces[0]))
@@ -63,6 +67,7 @@ namespace VocalKnight
                     if (secRemaining > 0)
                     {
                         Logger.LogWarn("Cooldown for command " + c.Name + " still has " + secRemaining + " seconds remaining.");
+                        RecognizerUtil.commandOnCooldown = true;
                         continue;
                     }
                 }

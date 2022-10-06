@@ -16,7 +16,7 @@ namespace VocalKnight.Commands
     public class Area
     {
         [HKCommand("bees")]
-        [Cooldown(5)]
+        [Cooldown(CommonVars.cldn)]
         [Summary("Hive Knight's bee storm attack")]
         public IEnumerator Bees()
         {
@@ -61,7 +61,7 @@ namespace VocalKnight.Commands
         }
 
         [HKCommand("belfly")]
-        [Cooldown(5)]
+        [Cooldown(CommonVars.cldn)]
         [Summary("Spawns a couple of the boom bats")]
         public IEnumerator Belflies()
         {
@@ -91,7 +91,7 @@ namespace VocalKnight.Commands
         }
 
         [HKCommand("lasers")]
-        [Cooldown(5)]
+        [Cooldown(CommonVars.cldn)]
         [Summary("Summons Crystal Peak lasers")]
         public void Lasers()
         {
@@ -140,7 +140,7 @@ namespace VocalKnight.Commands
         }
 
         [HKCommand("jelly")]
-        [Cooldown(15)]
+        [Cooldown(CommonVars.cldn)]
         [Summary("Fills the room with jellies")]
         public void SpawnJellies()
         {
@@ -217,7 +217,7 @@ namespace VocalKnight.Commands
 
         [HKCommand("spikefloor")]
         [Summary("Spawns NKG spikes from the floor")]
-        [Cooldown(10)]
+        [Cooldown(CommonVars.cldn)]
         public IEnumerator SpikeFloor()
         {
             Vector3 hero_pos = HeroController.instance.transform.position;
