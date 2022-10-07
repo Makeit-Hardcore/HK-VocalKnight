@@ -79,7 +79,7 @@ namespace VocalKnight.Utils
             { "xero", new List<string>() {"0","zero","none","nothing"} },
             //{ "enemy markoth", new List<string>() {"shield","mark"} }, //FIX
             { "sheo red", new List<string>() {"red","pink","brick","crimson"} },
-            { "sheo purple", new List<string>() {"purple","violet","lavendar","royal"} },
+            { "sheo purple", new List<string>() {"purple","violet","lavender","royal"} },
             { "sheo blue", new List<string>() {"blue","cyan","indigo","deep"} },
             { "sheo yellow", new List<string>() {"yellow","gold","dandelion","banana"} },
             { "nightmare", new List<string>() {"grim","fire","bat","flame"} },
@@ -98,8 +98,9 @@ namespace VocalKnight.Utils
             { "charmcurse", new List<string>() {"charm","equip","notch"} },
             { "timewarp", new List<string>() {"time","move","warp"} },
             { "setText Potty Mouth ", new List<string>() {"***","damn"} },
-            { "jelly", new List<string>() {"jelly","fog","spill","orange"} }, //IMPLEMENT
-            { "party", new List<string>() {"party","dab","hard","core"} } //IMPLEMENT
+            { "jelly", new List<string>() {"jelly","fog","spill","orange"} },
+            { "party", new List<string>() {"party","dab","hard","core"} },
+            { "grub", new List<string>() {"grub","mimic","god","academy"} }
         };
         private static int runcount = 0;
 

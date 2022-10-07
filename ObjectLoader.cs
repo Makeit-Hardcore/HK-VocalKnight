@@ -129,6 +129,15 @@ namespace VocalKnight
                 ("kingsmould", null), ("White_Palace_02", "Battle Scene/Royal Gaurd")
             },
             {
+                ("grub", null), ("Mines_16", "Grub Bottle")
+            },
+            //{
+            //    ("mimic", null), ("Mines_16", "Grub Mimic Top")
+            //},
+            //{
+            //    ("gm_jar", null), ("Mines_16,", "Grub Mimic Bottle")
+            //},
+            {
                 ("prefab_jar", null), ("Ruins2_11", "Break Jar (6)")
             },
             {

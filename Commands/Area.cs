@@ -150,17 +150,7 @@ namespace VocalKnight.Commands
             bool badPosFlag = false;
             int maxJellies = (int)Math.Ceiling(cam.sceneWidth * cam.sceneHeight / 400);
 
-            EdgeCollider2D[] tiles = cam.tilemap.renderData.transform.GetChild(0).GetComponentsInChildren<EdgeCollider2D>();
-            PolygonCollider2D[] polyTiles = new PolygonCollider2D[tiles.Length];
-            for (int i = 0; i < tiles.Length; i++)
-            {
-                Vector2[] vertices = tiles[i].points;
-                polyTiles[i] = tiles[i].gameObject.AddComponent<PolygonCollider2D>();
-                polyTiles[i].points = vertices;
-                polyTiles[i].pathCount = 1;
-                polyTiles[i].SetPath(0, vertices);
-                UObject.Destroy(tiles[i]);
-            }
+            PolygonCollider2D[] polyTiles = ConvertEdge2Poly(cam);
 
             List<Vector2> jelliesPos = new List<Vector2>();
 
@@ -213,6 +203,74 @@ namespace VocalKnight.Commands
                 jelly.transform.position = spawnPos;
                 jelly.SetActive(true);
             }
+        }
+
+        [HKCommand("grub")]
+        [Cooldown(CommonVars.cldn)]
+        [Summary("Fireb0rn's worst nightmare")]
+        public void Grubs()
+        {
+            CameraController cam = GameCameras.instance.transform.Find("CameraParent/tk2dCamera").gameObject.GetComponent<CameraController>();
+            float xDelta = 5f;
+
+            PolygonCollider2D[] polyTiles = ConvertEdge2Poly(cam);
+
+            List<Vector2> grubsPos = new List<Vector2>();
+
+            Logger.Log("Spawning grubs");
+
+            float xCentral = 0f;
+            while (xCentral < cam.sceneWidth)
+            {
+                float y = cam.sceneHeight;
+                while (y > 0f)
+                {
+                    bool badPosFlag = false;
+                    float x = xCentral + URandom.Range(-1.5f, 1.5f);
+
+                    RaycastHit2D floor = Physics2D.Raycast(new Vector2(x, y), Vector2.down, y, 1 << 8);
+                    if (floor.collider == null)
+                        break;
+                    
+                    Vector2 spawnPos = floor.point + new Vector2(0f, 1.35f);
+
+                    foreach (PolygonCollider2D tile in polyTiles)
+                    {
+                        if (tile.OverlapPoint(spawnPos))
+                            badPosFlag = true;
+                    }
+                    if (!badPosFlag)
+                    {
+                        ObjectLoader.InstantiableObjects.TryGetValue("grub", out GameObject go);
+                        GameObject grub = UObject.Instantiate(go, spawnPos, Quaternion.identity);
+                        UObject.Destroy(grub.GetComponent<PersistentBoolItem>());
+                        PlayMakerFSM grubFSM = grub.LocateMyFSM("Bottle Control");
+                        SFCore.Utils.FsmUtil.RemoveFsmAction(grubFSM, "Shatter", 2);
+                        SFCore.Utils.FsmUtil.RemoveFsmAction(grubFSM, "Shatter", 1);
+                        grub.SetActive(true);
+                    }
+
+                    y = floor.point.y - 2f;
+                }
+
+                xCentral += URandom.Range(4f, 8f);
+            }
+        }
+
+        private PolygonCollider2D[] ConvertEdge2Poly(CameraController cam)
+        {
+            EdgeCollider2D[] tiles = cam.tilemap.renderData.transform.GetChild(0).GetComponentsInChildren<EdgeCollider2D>();
+            PolygonCollider2D[] polyTiles = new PolygonCollider2D[tiles.Length];
+            for (int i = 0; i < tiles.Length; i++)
+            {
+                Vector2[] vertices = tiles[i].points;
+                polyTiles[i] = tiles[i].gameObject.AddComponent<PolygonCollider2D>();
+                polyTiles[i].points = vertices;
+                polyTiles[i].pathCount = 1;
+                polyTiles[i].SetPath(0, vertices);
+                UObject.Destroy(tiles[i]);
+            }
+            return polyTiles;
         }
 
         [HKCommand("spikefloor")]
