@@ -8,6 +8,8 @@ The player must be running the Windows 10 or Windows 11 operating system, as the
 
 To activate Online Speech Recognition, open your system's Settings app and navigate to Privacy --> Speech. From this page you can turn on the feature. The change is not permanent, and you can deactivate it at any time.
 
+To install the mod, download the most recent release and unzip the contents into a folder called VocalKnight within your Hollow Knight mods directory. On your system, this may look like "C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\Mods\VocalKnight\[.pdb, .dll, and README]" Please seek explicit permission from Makeit_Hardcore before using a pre-release version of the mod. You may reach him on Discord at Makeit_Hardcore#1992.
+
 ## Required Dependency Mods
 
 The following additional mods are required for the successful operation of VocalKnight:
