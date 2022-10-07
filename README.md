@@ -61,3 +61,4 @@ While this mod was fully developed by Makeit_Hardcore, much of the underlying co
 
 And lastly, a big shoutout to my beta-testers:
 - [spilled_oj_](https://www.twitch.tv/spilled_oj_)
+- [TheMulhima](https://github.com/TheMulhima)
