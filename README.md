@@ -50,7 +50,7 @@ One of the effects plays music which does not originate from Hollow Knight. The 
 ## Credits
 
 While this mod was fully developed by Makeit_Hardcore, much of the underlying code was borrowed and adapted from existing sources, listed below:
-- HollowTwitch(https://github.com/Sid-003/HKTwitch/): The original base upon which VocalKnight was constructed, responsible for the effect & cooldown systems, as well as a large number of the available effects. This mod was made by Sid-003, fifty-six, and a2659802.
+- [HollowTwitch](https://github.com/Sid-003/HKTwitch/): The original base upon which VocalKnight was constructed, responsible for the effect & cooldown systems, as well as a large number of the available effects. This mod was made by Sid-003, fifty-six, and a2659802.
 - [Benchwarp](https://github.com/homothetyhk/HollowKnight.BenchwarpMod/): Responsible for the "bench" effect. This mod was made by homothetyhk, dpinela, flibber-hk, fifty-six, seresharp, pseudorandomhk, HKLab, and ygsbzr.
 - [HKHKHKHKHK](https://github.com/SFGrenade/HKHKHKHKHK/): Responsible for the "gravup" effect. This mod was made by SFGrenade.
 - [AdditionalChallenge](https://github.com/TheMulhima/AdditionalChallenge): Responsible for a number of effects, including "gorb," "nightmare," and "sheo." This mod was made by TheMulhima.
