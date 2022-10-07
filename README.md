@@ -14,6 +14,7 @@ The following additional mods are required for the successful operation of Vocal
 - Satchel
 - SFCore
 - Vasi
+
 These can all be installed using [Scarab](https://github.com/fifty-six/Scarab).
 
 ## Suggested Companion Mods
@@ -22,6 +23,7 @@ The following additional mods are highly recommended to be installed and enabled
 - Benchwarp
 - DebugMod
 - QoL
+
 Again, these can all be installed using Scarab.
 
 ## Additional Mod Compatibility
