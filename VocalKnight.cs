@@ -143,6 +143,7 @@ namespace VocalKnight
 
             ModHooks.AfterPlayerDeadHook += CancelEffects;
             On.HeroController.Awake += OnHeroControllerAwake;
+            RecognizerUtil.foundCommands.CollectionChanged += ExecuteCommands;
 
             NewRecognizer();
 
@@ -162,6 +163,18 @@ namespace VocalKnight
         private void CancelEffects()
         {
             CoroutineUtil.cancel = true;
+        }
+
+        private void ExecuteCommands(object sender, NotifyCollectionChangedEventArgs args)
+        {
+            if (args.NewItems != null)
+            {
+                foreach (string command in args.NewItems)
+                {
+                    Logger.Log("Executing command: " + command);
+                    Processor.Execute(command, null);
+                }
+            }
         }
 
         private void ConfigureCooldowns()
@@ -252,13 +265,14 @@ namespace VocalKnight
         {
             UObject.Destroy(kp);
             UObject.Destroy(dictText);
-            recognizer.KillRecognizer();
+            recognizer.ForceDestroy();
             recognizer.runner.StopAllCoroutines();
             recognizer = null;
             GC.Collect();
             UObject.Destroy(HeroController.instance.GetComponent<Emoter>());
             ModHooks.AfterPlayerDeadHook -= CancelEffects;
             On.HeroController.Awake -= OnHeroControllerAwake;
+            RecognizerUtil.foundCommands.CollectionChanged -= ExecuteCommands;
         }
 
         public void OnLoadGlobal(GSets s)

@@ -9,14 +9,14 @@ using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 using UObject = UnityEngine.GameObject;
 using URandom = UnityEngine.Random;
-using Vasi;
+using Satchel;
 
 namespace VocalKnight.Commands
 {
     public class Area
     {
         [HKCommand("bees")]
-        [Cooldown(CommonVars.cldn)]
+        [Cooldown(CommonVars.cldn * 2)]
         [Summary("Hive Knight's bee storm attack")]
         public IEnumerator Bees()
         {
@@ -61,7 +61,7 @@ namespace VocalKnight.Commands
         }
 
         [HKCommand("belfly")]
-        [Cooldown(CommonVars.cldn)]
+        [Cooldown(CommonVars.cldn * 2)]
         [Summary("Spawns a couple of the boom bats")]
         public IEnumerator Belflies()
         {
@@ -91,7 +91,7 @@ namespace VocalKnight.Commands
         }
 
         [HKCommand("lasers")]
-        [Cooldown(CommonVars.cldn)]
+        [Cooldown(CommonVars.cldn * 2)]
         [Summary("Summons Crystal Peak lasers")]
         public void Lasers()
         {
@@ -140,7 +140,7 @@ namespace VocalKnight.Commands
         }
 
         [HKCommand("jelly")]
-        [Cooldown(CommonVars.cldn)]
+        [Cooldown(CommonVars.cldn * 2)]
         [Summary("Fills the room with jellies")]
         public void SpawnJellies()
         {
@@ -275,7 +275,7 @@ namespace VocalKnight.Commands
 
         [HKCommand("spikefloor")]
         [Summary("Spawns NKG spikes from the floor")]
-        [Cooldown(CommonVars.cldn)]
+        [Cooldown(CommonVars.cldn * 2)]
         public IEnumerator SpikeFloor()
         {
             Vector3 hero_pos = HeroController.instance.transform.position;

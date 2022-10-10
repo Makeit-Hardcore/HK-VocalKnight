@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
-using Rand = System.Random;
 using GlobalEnums;
 using VocalKnight.Entities.Attributes;
 using VocalKnight.ModHelpers;
@@ -14,8 +13,6 @@ using Modding;
 using SFCore.Utils;
 using UnityEngine;
 using UnityEngine.Networking;
-using UnityEngine.SceneManagement;
-using Vasi;
 using VasiFSM = Vasi.FsmUtil;
 using UObject = UnityEngine.Object;
 
@@ -57,7 +54,7 @@ namespace VocalKnight.Commands
 
         [HKCommand("ax2uBlind")]
         [Summary("Makes the room a dark room")]
-        [Cooldown(CommonVars.cldn)]
+        [Cooldown(CommonVars.cldn * 2)]
         public  IEnumerator Blind()
         {
             void OnSceneLoad(On.GameManager.orig_EnterHero orig, GameManager self, bool additiveGateSearch)
@@ -78,7 +75,7 @@ namespace VocalKnight.Commands
 
         [HKCommand("nopogo")]
         [Summary("Disables pogo bouncing")]
-        [Cooldown(CommonVars.cldn)]
+        [Cooldown(CommonVars.cldn * 2)]
         public  IEnumerator PogoKnockback()
         {
             void NoBounce(On.HeroController.orig_Bounce orig, HeroController self) { }
@@ -92,7 +89,7 @@ namespace VocalKnight.Commands
 
         [HKCommand("conveyor")]
         [Summary("Floors or walls act like conveyors")]
-        [Cooldown(CommonVars.cldn)]
+        [Cooldown(CommonVars.cldn * 2)]
         public  IEnumerator Conveyor()
         {
             bool vert = Random.Range(0, 2) == 0;
@@ -124,7 +121,7 @@ namespace VocalKnight.Commands
 
         [HKCommand("jumplength")]
         [Summary("Gives a random jump length")]
-        [Cooldown(CommonVars.cldn)]
+        [Cooldown(CommonVars.cldn * 2)]
         public  IEnumerator JumpLength()
         {
             HeroController hc = HeroController.instance;
@@ -139,7 +136,7 @@ namespace VocalKnight.Commands
         }
 
         [HKCommand("sleep")]
-        [Cooldown(CommonVars.cldn)]
+        [Cooldown(CommonVars.cldn * 2)]
         [Summary("Puts The Knight to sleep")]
         public  IEnumerator Sleep()
         {
@@ -162,7 +159,7 @@ namespace VocalKnight.Commands
 
         [HKCommand("jumpspeed")]
         [Summary("Gives a random jump speed")]
-        [Cooldown(CommonVars.cldn)]
+        [Cooldown(CommonVars.cldn * 2)]
         public  IEnumerator JumpSpeed()
         {
             HeroController hc = HeroController.instance;
@@ -178,7 +175,7 @@ namespace VocalKnight.Commands
 
         [HKCommand("wind")]
         [Summary("Makes it a windy day")]
-        [Cooldown(CommonVars.cldn)]
+        [Cooldown(CommonVars.cldn * 2)]
         public  IEnumerator Wind()
         {
             float speed = Random.Range(-6f, 6f);
@@ -209,7 +206,7 @@ namespace VocalKnight.Commands
 
         [HKCommand("dashSpeed")]
         [Summary("Changes dash speed")]
-        [Cooldown(CommonVars.cldn)]
+        [Cooldown(CommonVars.cldn * 2)]
         public  IEnumerator DashSpeed()
         {
             HeroController hc = HeroController.instance;
@@ -226,7 +223,7 @@ namespace VocalKnight.Commands
 
         [HKCommand("dashLength")]
         [Summary("Changes dash length")]
-        [Cooldown(CommonVars.cldn)]
+        [Cooldown(CommonVars.cldn * 2)]
         public  IEnumerator DashLength()
         {
             HeroController hc = HeroController.instance;
@@ -243,7 +240,7 @@ namespace VocalKnight.Commands
 
         [HKCommand("dashVector")]
         [Summary("Changes dash vector")]
-        [Cooldown(CommonVars.cldn)]
+        [Cooldown(CommonVars.cldn * 2)]
         public  IEnumerator DashVector()
         {
             Vector2? vec = null;
@@ -278,7 +275,7 @@ namespace VocalKnight.Commands
 
         [HKCommand("timescale")]
         [Summary("Makes the game run faster or slower")]
-        [Cooldown(CommonVars.cldn)]
+        [Cooldown(CommonVars.cldn * 2)]
         [SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
         public  IEnumerator ChangeTimescale([EnsureFloat(0.01f, 2f)] float scale)
         {
@@ -295,7 +292,7 @@ namespace VocalKnight.Commands
 
         [HKCommand("weight")]
         [Summary("Changes the weight of the player")]
-        [Cooldown(CommonVars.cldn)]
+        [Cooldown(CommonVars.cldn * 2)]
         public  IEnumerator ChangeGravity([EnsureFloat(0.2f, 1.90f)] float scale)
         {
             var rigidBody = HeroController.instance.gameObject.GetComponent<Rigidbody2D>();
@@ -315,7 +312,7 @@ namespace VocalKnight.Commands
 
         [HKCommand("invertcontrols")]
         [Summary("Inverts movement controls")]
-        [Cooldown(CommonVars.cldn)]
+        [Cooldown(CommonVars.cldn * 2)]
         public  IEnumerator InvertControls()
         {
             void Invert(On.HeroController.orig_Move orig, HeroController self, float dir)
@@ -365,7 +362,7 @@ namespace VocalKnight.Commands
         }
 
         [HKCommand("bounce")]
-        [Cooldown(CommonVars.cldn)]
+        [Cooldown(CommonVars.cldn * 2)]
         [Summary("Makes the floor bouncy")]
         public IEnumerator Bouncy()
         {
@@ -382,7 +379,7 @@ namespace VocalKnight.Commands
 
         [HKCommand("slippery")]
         [Summary("Makes the floor slippery")]
-        [Cooldown(CommonVars.cldn)]
+        [Cooldown(CommonVars.cldn * 2)]
         public  IEnumerator Slippery()
         {
             float last_move_dir = 0;
@@ -416,7 +413,7 @@ namespace VocalKnight.Commands
 
         [HKCommand("nailscale")]
         [Summary("Changes nail size for The Knight")]
-        [Cooldown(CommonVars.cldn)]
+        [Cooldown(CommonVars.cldn * 2)]
         public  IEnumerator NailScale([EnsureFloat(.3f, 5f)] float nailScale)
         {
             void ChangeNailScale(On.NailSlash.orig_StartSlash orig, NailSlash self)
@@ -435,7 +432,7 @@ namespace VocalKnight.Commands
 
         [HKCommand("bindings")]
         [Summary("Enables bindings")]
-        [Cooldown(CommonVars.cldn)]
+        [Cooldown(CommonVars.cldn * 2)]
         public  IEnumerator EnableBindings()
         {
             BindingsHelper.AddDetours();
@@ -452,7 +449,7 @@ namespace VocalKnight.Commands
 
         [HKCommand("hwurmpU")]
         [Summary("I don't even know honestly...")]
-        [Cooldown(CommonVars.cldn)]
+        [Cooldown(CommonVars.cldn * 2)]
         public  IEnumerator EnableMaggotPrimeSkin()
         {
             GameObject go = UObject.Instantiate(_maggot, HeroController.instance.transform.position + new Vector3(0, 0, -1f), Quaternion.identity);
@@ -472,7 +469,7 @@ namespace VocalKnight.Commands
         }
 
         [HKCommand("walkspeed")]
-        [Cooldown(CommonVars.cldn)]
+        [Cooldown(CommonVars.cldn * 2)]
         [Summary("Changes The Knight's walk speed")]
         public  IEnumerator WalkSpeed([EnsureFloat(0.3f, 10f)] float speed)
         {
@@ -486,7 +483,7 @@ namespace VocalKnight.Commands
         }
 
         [HKCommand("geo")]
-        [Cooldown(CommonVars.cldn)]
+        [Cooldown(CommonVars.cldn * 2)]
         [Summary("The Knight explodes with geo")]
         public  void Geo()
         {
@@ -513,7 +510,7 @@ namespace VocalKnight.Commands
         }
 
         [HKCommand("respawn")]
-        [Cooldown(3)]
+        [Cooldown(CommonVars.cldn)]
         [Summary("Causes a hazard respawn like falling into spikes")]
         public IEnumerator HazardRespawn()
         {
@@ -637,7 +634,7 @@ namespace VocalKnight.Commands
         }
 
         [HKCommand("gravup")]
-        [Cooldown(CommonVars.cldn)]
+        [Cooldown(CommonVars.cldn * 2)]
         [Summary("Flips gravity upside down")]
         public IEnumerator FlipGravity()
         {
@@ -744,7 +741,7 @@ namespace VocalKnight.Commands
 
         [HKCommand("disable")]
         [Summary("Disables an ability, such as dash or claw")]
-        [Cooldown(CommonVars.cldn)]
+        [Cooldown(CommonVars.cldn * 2)]
         public IEnumerator ToggleAbility(string ability)
         {
             const float time = CommonVars.cldn;
@@ -773,7 +770,7 @@ namespace VocalKnight.Commands
 
         [HKCommand("nailonly")]
         [Summary("Disables the usage of spells")]
-        [Cooldown(CommonVars.cldn)]
+        [Cooldown(CommonVars.cldn * 2)]
         public IEnumerator DisableSpells()
         {
             bool OnCanCast(On.HeroController.orig_CanCast orig, HeroController self)
@@ -788,7 +785,7 @@ namespace VocalKnight.Commands
 
         [HKCommand("nonail")]
         [Summary("Prevents The Knight from swinging the nail")]
-        [Cooldown(CommonVars.cldn)]
+        [Cooldown(CommonVars.cldn * 2)]
         public IEnumerator DisableNail()
         {
             bool OnCanAttack(On.HeroController.orig_CanAttack orig, HeroController self)
@@ -803,7 +800,7 @@ namespace VocalKnight.Commands
 
         [HKCommand("noheal")]
         [Summary("Prevents The Knight from focusing")]
-        [Cooldown(CommonVars.cldn)]
+        [Cooldown(CommonVars.cldn * 2)]
         public IEnumerator DisableFocus()
         {
             bool OnCanFocus(On.HeroController.orig_CanFocus orig, HeroController self)
@@ -818,7 +815,7 @@ namespace VocalKnight.Commands
 
         [HKCommand("doubledamage")]
         [Summary("Makes The Knight take double damage")]
-        [Cooldown(CommonVars.cldn)]
+        [Cooldown(CommonVars.cldn * 2)]
         public  IEnumerator DoubleDamage()
         {
             static int InstanceOnTakeDamageHook(ref int hazardtype, int damage) => damage * 2;
@@ -829,7 +826,7 @@ namespace VocalKnight.Commands
 
         [HKCommand("hungry")]
         [Summary("Drains soul constantly. When soul reaches 0, the player takes damage")]
-        [Cooldown(CommonVars.cldn * 3)]
+        [Cooldown(CommonVars.cldn * 4)]
         public IEnumerator HungryKnight()
         {
             var go = new GameObject();
@@ -932,7 +929,7 @@ namespace VocalKnight.Commands
 
         [HKCommand("timewarp")]
         [Summary("Warps The Knight back to where they were X seconds ago")]
-        [Cooldown(5)]
+        [Cooldown(CommonVars.cldn * 2)]
         public IEnumerator Timewarp()
         {
             PlayMakerFSM dreamnailFSM = HeroController.instance.gameObject.LocateMyFSM("Dream Nail");

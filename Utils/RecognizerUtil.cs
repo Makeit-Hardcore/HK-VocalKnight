@@ -1,5 +1,4 @@
-﻿using Modding;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.ObjectModel;
 using System.Collections.Generic;
@@ -19,90 +18,97 @@ namespace VocalKnight.Utils
         public MonoBehaviour runner;
         private float timer;
         private const float timerMax = 20f;
-        private static List<string> foundCommands = new List<string>();
-        public static bool commandOnCooldown = false;
+
+        public static ObservableCollection<string> foundCommands = new ObservableCollection<string>();
         
-        // Dict{ command, (list of keywords) }
-        private static Dictionary<string, List<string>> keywords = new Dictionary<string, List<string>>()
+        public static bool commandOnCooldown = false;
+        private static int runcount = 0;
+
+        /* Dict{ command, (list of keywords) }
+           Three preset difficulties: 1 being easiest, 3 being hardest
+           Order DOES matter, as there is priority usage when OneAtATime is enabled */
+        private static Dictionary<string, List<string>> keywords_1 = new Dictionary<string, List<string>>()
         {
             { "reset", new List<string>() {"neutralize"} },
-            { "spikefloor", new List<string>() {"point","spike"} },
-            { "bees", new List<string>() {"bee","bea","hive"} },
-            { "lasers", new List<string>() {"peak","peek","laser"} },
-            { "radiance", new List<string>() {"light","sphere","orb","lite"} },
             { "cameffect Invert", new List<string>() {"switch","invert"} },
-            { "cameffect Flip", new List<string>() {"flip"} },
-            { "cameffect Nausea", new List<string>() {"wave","dizzy","blur"} },
-            { "cameffect Mirror", new List<string>() {"two","mirror","2"} },
             { "cameffect Pixelate", new List<string>() {"old","retro","censor","pixel"} },
-            { "cameffect Zoom", new List<string>() {"close","zoom"} },
-            { "ax2uBlind", new List<string>() {"dark","blind","daniel"} },
-            { "nopogo", new List<string>() {"pogo","down"} },
             { "sleep", new List<string>() {"tired","sleep","drowsy"} },
             { "wind", new List<string>() {"push","blow","wind"} },
-            { "timescale 0.5", new List<string>() {"slow"} },
-            { "timescale 2", new List<string>() {"fast"} },
-            { "weight 0.5", new List<string>() {"space","moon","float"} },
-            { "weight 1.9", new List<string>() {"heavy","weigh","strong","fat"} },
-            { "invertcontrols", new List<string>() {"turn","wrong"} },
-            { "slippery", new List<string>() {"wet","slip","water","hydrate"} },
-            { "nailscale 0.5", new List<string>() {"small","tiny"} },
-            { "bindings", new List<string>() {"bind","pantheon","chain"} },
-            { "hwurmpU", new List<string>() {"pretty","curse","ugly" } },
-            { "walkspeed 4", new List<string>() {"run","sprint"} },
-            { "walkspeed 0.5", new List<string>() {"walk","jog"} },
-            { "geo", new List<string>() {"geo","money","coin"} },
-            { "respawn", new List<string>() {"hurt","ouch"} },
-            { "bench", new List<string>() {"bench","rest","spawn"} },
-            { "die", new List<string>() {"die","dead","death","dye"} },
-            { "bounce", new List<string>() {"bounc","shroom","fung"} },
-            { "gravup", new List<string>() {"up","top","gravit"} },
-            { "disable dash", new List<string>() {"dash"} },
-            { "disable superdash", new List<string>() {"heart"} },
-            { "disable claw", new List<string>() {"wall","claw","cling"} },
-            { "disable wings", new List<string>() {"wing","double"} },
-            { "disable dnail", new List<string>() {"dream"} },
-            { "nonail", new List<string>() {"nail","swing"} },
-            { "noheal", new List<string>() {"focus","heal"} },
-            { "nailonly", new List<string>() {"spell","shaman","shriek","dive"} },
-            { "doubledamage", new List<string>() {"damage","fragile","weak","week"} },
-            { "zap", new List<string>() {"shock","electric","volt","zap"} },
-            { "jars", new List<string>() {"trap","jar","collect","enemy"} },
-            { "purevessel", new List<string>() {"night","white","pure","vessel"} },
-            { "revek", new List<string>() {"grave","attack","ghost","protect"} },
-            { "belfly", new List<string>() {"fly","explod","annoy","boom"} },
-            { "enemy marmu", new List<string>() {"mar","ball","cat"} },
+            { "invertcontrols", new List<string>() {"1","turn","wrong"} },
+            { "slippery", new List<string>() {"1","wet","slip","water","hydrate"} },
+            { "timescale 0.5", new List<string>() {"1","slow"} },
+            { "hwurmpU", new List<string>() {"1","pretty","curse","ugly" } },
+            { "walkspeed 0.5", new List<string>() {"1","walk","jog"} },
+            { "sheo purple", new List<string>() {"1","purple","violet","lavender","royal"} },
+            { "sheo blue", new List<string>() {"1","blue","cyan","indigo","deep"} },
+            { "geo", new List<string>() {"1","geo","money","coin"} },
+            { "bounce", new List<string>() {"1","bounc","shroom","fung"} },
+            { "grub", new List<string>() {"1","grub","mimic","god","academy"} },
+            { "disable superdash", new List<string>() {"1","heart"} },
+            { "disable claw", new List<string>() {"1","wall","claw","cling"} },
+            { "disable wings", new List<string>() {"1","wing","double"} },
+            { "disable dnail", new List<string>() {"1","dream"} },
+            { "setText Potty Mouth ", new List<string>() {"1","***","damn"} },
+            { "enemy crystal", new List<string>() {"1","shoot","crystal"} },
+            { "enemy petra", new List<string>() {"1","disc","blade","petra"} },
+            { "enemy roller", new List<string>() {"1","roll"} },
+            { "grimmchild", new List<string>() {"1","child","kid","follow","chase"} }
+        };
+        private static Dictionary<string, List<string>> keywords_2 = new Dictionary<string, List<string>>()
+        {
+            { "enemy angrybuzzer", new List<string>() {"2","angry","mad","furious"} },
+            { "timewarp", new List<string>() {"2","time","move","warp"} },
+            { "aspidrancher", new List<string>() {"2","spit","primal","triple","aspid"} },
+            { "walkspeed 2.5", new List<string>() {"2","run","sprint"} },
+            { "enemy drillbee", new List<string>() {"2","sting","screw","drill"} },
+            { "spikefloor", new List<string>() {"2","point","spike"} },
+            { "party", new List<string>() {"2","party","dab","hard","core"} },
+            { "bees", new List<string>() {"2", "bee","bea","hive"} },
+            { "lasers", new List<string>() {"2","peak","peek","laser"} },
+            { "disable dash", new List<string>() {"2","dash"} },
+            { "radiance", new List<string>() {"2","light","sphere","orb","lite"} },
+            { "cameffect Flip", new List<string>() {"2","flip"} },
+            { "cameffect Nausea", new List<string>() {"2","wave","dizzy","blur"} },
+            { "cameffect Mirror", new List<string>() {"2","two","mirror"} },
+            { "cameffect Zoom", new List<string>() {"2","close","zoom"} },
+            { "nopogo", new List<string>() {"2","pogo","down"} },
+            { "nailscale 0.5", new List<string>() {"2","small","tiny"} },
+            { "zap", new List<string>() {"2","shock","electric","volt","zap"} },
+            { "jars", new List<string>() {"2","trap","jar","collect","enemy"} },
+            { "sheo red", new List<string>() {"2","red","pink","brick","crimson"} },
+            { "sheo yellow", new List<string>() {"2","yellow","gold","dandelion","banana"} }
+        };
+        private static Dictionary<string, List<string>> keywords_3 = new Dictionary<string, List<string>>()
+        {
+            { "ax2uBlind", new List<string>() {"3","dark","blind","daniel"} },
+            { "timescale 1.5", new List<string>() {"3","fast"} },
+            { "bindings", new List<string>() {"3","bind","pantheon","chain"} },
+            { "respawn", new List<string>() {"3","hurt","ouch"} },
+            { "bench", new List<string>() {"3","bench","rest","spawn"} },
+            { "die", new List<string>() {"3","die","dead","death","dye"} },
+            { "gravup", new List<string>() {"3","up","top","gravit"} },
+            { "nonail", new List<string>() {"3","nail","swing"} },
+            { "noheal", new List<string>() {"3","focus","heal"} },
+            { "nailonly", new List<string>() {"3","spell","shaman","shriek","dive"} },
+            { "doubledamage", new List<string>() {"3","damage","fragile","weak","week"} },
+            { "purevessel", new List<string>() {"3","night","white","pure","vessel"} },
+            { "revek", new List<string>() {"3","grave","attack","ghost","protect"} },
+            { "belfly", new List<string>() {"3","fly","explod","annoy","boom"} },
+            { "marmu", new List<string>() {"3","mar","ball","cat"} },
             //{ "enemy hu", new List<string>() {"who","flat","pancake"} }, //FIX
-            { "gorb", new List<string>() {"brain","ascend","rise"} }, //FIX
+            { "gorb", new List<string>() {"3","brain","ascend","rise"} }, //FIX
             //{ "enemy noeyes", new List<string>() {"eye","baby"} }, //FIX
             //{ "enemy galien", new List<string>() {"spin","alien"} }, //FIX
-            { "xero", new List<string>() {"0","zero","none","nothing"} },
+            { "xero", new List<string>() {"3","zero","none","nothing"} },
             //{ "enemy markoth", new List<string>() {"shield","mark"} }, //FIX
-            { "sheo red", new List<string>() {"red","pink","brick","crimson"} },
-            { "sheo purple", new List<string>() {"purple","violet","lavender","royal"} },
-            { "sheo blue", new List<string>() {"blue","cyan","indigo","deep"} },
-            { "sheo yellow", new List<string>() {"yellow","gold","dandelion","banana"} },
-            { "nightmare", new List<string>() {"grim","fire","bat","flame"} },
-            { "enemy bigbee", new List<string>() {"big","large","unit"} },
-            { "enemy drillbee", new List<string>() {"sting","screw","drill"} },
-            { "enemy crystal", new List<string>() {"shoot","crystal"} },
-            { "enemy petra", new List<string>() {"disc","blade","petra"} },
-            { "enemy kingsmould", new List<string>() {"king","guard","mold","mould"} },
-            { "enemy roller", new List<string>() {"roll"} },
-            { "enemy angrybuzzer", new List<string>() {"angry","mad","furious"} },
-            { "enemy mawlek", new List<string>() {"maw","lick"} },
-            { "aspidrancher", new List<string>() {"spit","primal","triple","aspid"} },
+            { "nightmare", new List<string>() {"3","grim","fire","bat","flame"} },
+            { "enemy bigbee", new List<string>() {"3","big","large","unit"} },
+            { "enemy kingsmould", new List<string>() {"3","king","guard","mold","mould"} },
             //{ "enemy radiance", new List<string>() {"god","rad","raid","moth"} }, //FIX
-            { "grimmchild", new List<string>() {"child","kid","follow","chase"} },
-            { "hungry", new List<string>() {"hungry","food","hunger","starv"} },
-            { "charmcurse", new List<string>() {"charm","equip","notch"} },
-            { "timewarp", new List<string>() {"time","move","warp"} },
-            { "setText Potty Mouth ", new List<string>() {"***","damn"} },
-            { "jelly", new List<string>() {"jelly","fog","spill","orange"} },
-            { "party", new List<string>() {"party","dab","hard","core"} },
-            { "grub", new List<string>() {"grub","mimic","god","academy"} }
+            { "hungry", new List<string>() {"3","hungry","food","hunger","starv"} },
+            { "charmcurse", new List<string>() {"3","charm","equip","notch"} },
+            { "jelly", new List<string>() {"3","jelly","fog","spill","orange"} }
         };
-        private static int runcount = 0;
 
 		public RecognizerUtil()
 		{
@@ -284,14 +290,22 @@ namespace VocalKnight.Utils
 
         public static string[] GetCommands()
         {
-            string[] commands = new string[keywords.Count];
-            keywords.Keys.CopyTo(commands, 0);
+            string[] commands = new string[keywords_1.Count + keywords_2.Count + keywords_3.Count];
+            keywords_1.Keys.CopyTo(commands, 0);
+            keywords_2.Keys.CopyTo(commands, keywords_1.Count);
+            keywords_3.Keys.CopyTo(commands, keywords_1.Count + keywords_2.Count);
             return commands;
         }
 
         private void TimerReset(object source, EventArgs e)
         {
             timer = timerMax;
+        }
+
+        public void ForceDestroy()
+        {
+            dictRecognizer = null;
+            GC.Collect();
         }
 
         private IEnumerator FreezeTimer()
@@ -302,10 +316,9 @@ namespace VocalKnight.Utils
                 yield return null;
             }
             Logger.LogWarn("Rec timer ran up! Forcefully restarting");
-            
+
             //Force a threaded Destruct of the recognizer with the GC, since Dispose() will cause freezing/crash
-            dictRecognizer = null;
-            GC.Collect();
+            ForceDestroy();
             yield return null;
 
             //Allow the recognizer to restart normally

@@ -14,7 +14,6 @@ using Modding;
 using UObject = UnityEngine.Object;
 using URandom = UnityEngine.Random;
 using SFCoreFSM = SFCore.Utils.FsmUtil;
-using Satch = Satchel.FsmUtil;
 using UnityEngine.SceneManagement;
 using USceneManager = UnityEngine.SceneManagement.SceneManager;
 using Vasi;
@@ -34,8 +33,19 @@ namespace VocalKnight.Commands
                 enemy.SetActive(true);
         }
 
+        [HKCommand("marmu")]
+        [Cooldown(CommonVars.cldn * 2)]
+        [Summary("Spawns Ghost Warrior Marmu")]
+        public void SpawnMarmu()
+        {
+            GameObject enemy = SpawnEnemyGeneric("marmu");
+
+            if (enemy != null)
+                enemy.SetActive(true);
+        }
+
         [HKCommand("xero")]
-        [Cooldown(CommonVars.cldn)]
+        [Cooldown(CommonVars.cldn * 2)]
         [Summary("Spawns Ghost Warrior Xero")]
         public void SpawnXero()
         {
@@ -213,7 +223,7 @@ namespace VocalKnight.Commands
         }
 
         [HKCommand("jars")]
-        [Cooldown(CommonVars.cldn)]
+        [Cooldown(CommonVars.cldn * 2)]
         [Summary("Spawns Collector's jars that contain various generic enemies")]
         public IEnumerator Jars()
         {
@@ -251,7 +261,7 @@ namespace VocalKnight.Commands
         }
 
         [HKCommand("purevessel")]
-        [Cooldown(CommonVars.cldn)]
+        [Cooldown(CommonVars.cldn * 2)]
         [Summary("Spawns Pure Vessel")]
         public void SpawnPureVessel()
         {
@@ -309,7 +319,7 @@ namespace VocalKnight.Commands
 
         [HKCommand("revek")]
         [Summary("Revek attacks the player until he is hit")]
-        [Cooldown(30)]
+        [Cooldown(CommonVars.cldn * 2)]
         public IEnumerator Revek()
         {
             GameObject revek = UObject.Instantiate
@@ -358,7 +368,7 @@ namespace VocalKnight.Commands
         }
 
         [HKCommand("zap")]
-        [Cooldown(CommonVars.cldn)]
+        [Cooldown(CommonVars.cldn * 2)]
         [Summary("Electric shocks follow the player")]
         public IEnumerator StartZapping()
         {
@@ -372,7 +382,7 @@ namespace VocalKnight.Commands
         }
 
         [HKCommand("nightmare")]
-        [Cooldown(CommonVars.cldn)]
+        [Cooldown(CommonVars.cldn * 2)]
         [Summary("Summons NKG to perform a random attack")]
         public void SummonNKG()
         {
@@ -406,52 +416,6 @@ namespace VocalKnight.Commands
             PlayMakerFSM ctrl = Grimm.LocateMyFSM("Control");
             Grimm.gameObject.layer = 31; //set to a layer that isnt in GlobalEnums.PhysLayers to avoid collision
 
-            //SFCoreFSM.ChangeFsmTransition(ctrl, "Init", "FINISHED", "Move Choice");
-
-            /*ctrl.GetAction<SendRandomEventV3>("Move Choice", 2).events = new FsmEvent[]
-            {
-                new FsmEvent("FIREBATS"),
-                new FsmEvent("SLASH"),
-                new FsmEvent("AIRDASH"),
-                new FsmEvent("PILLARS")
-            };
-            ctrl.GetAction<SendRandomEventV3>("Move Choice", 2).weights = new FsmFloat[]
-            {
-                1f, 1f, 1f, 1f
-            };
-            ctrl.GetAction<SendRandomEventV3>("Move Choice", 2).trackingInts = new FsmInt[]
-            {
-                SFCoreFSM.GetFsmIntVariable(ctrl, "Ct Firebats"),
-                SFCoreFSM.GetFsmIntVariable(ctrl, "Ct Slash"),
-                SFCoreFSM.GetFsmIntVariable(ctrl, "Ct AirDash"),
-                SFCoreFSM.GetFsmIntVariable(ctrl, "Ct Pillar")
-            };
-            ctrl.GetAction<SendRandomEventV3>("Move Choice", 2).eventMax = new FsmInt[]
-            {
-                2, 3, 2, 1
-            };
-            ctrl.GetAction<SendRandomEventV3>("Move Choice", 2).trackingIntsMissed = new FsmInt[]
-            {
-                SFCoreFSM.GetFsmIntVariable(ctrl, "Ms Firebats"),
-                SFCoreFSM.GetFsmIntVariable(ctrl, "Ms Slash"),
-                SFCoreFSM.GetFsmIntVariable(ctrl, "Ms AirDash"),
-                SFCoreFSM.GetFsmIntVariable(ctrl, "Ms Pillar")
-            };
-            ctrl.GetAction<SendRandomEventV3>("Move Choice", 2).missedMax = new FsmInt[]
-            {
-                5, 4, 5, 5
-            };*/
-            /*SFCoreFSM.ChangeFsmTransition(ctrl, "Move Choice", "SPIKES", "Pillar Pos");
-            SFCoreFSM.ChangeFsmTransition(ctrl, "Move Choice", "BALLOON", "Slash Pos");
-            SFCoreFSM.RemoveFsmAction(ctrl, "Move Choice", 0);
-
-            SFCoreFSM.RemoveFsmTransition(ctrl, "Out Pause", "FINISHED");
-
-            SFCoreFSM.ChangeFsmTransition(ctrl, "Uppercut?", "FINISHED", "Uppercut Antic");
-
-            SFCoreFSM.ChangeFsmTransition(ctrl, "Explode Pause", "FINISHED", "Tele Out");*/
-
-
             //we will use this as an "idle" state
             FsmState WaitingForAttackState = SFCoreFSM.CopyFsmState(ctrl, "Dormant", "WaitingForAttack");
             SFCoreFSM.ChangeFsmTransition(WaitingForAttackState, "WAKE", StartState);
@@ -464,21 +428,15 @@ namespace VocalKnight.Commands
                 SFCoreFSM.AddFsmTransition(ctrl.GetState("Dormant"), "FINISHED", "Tele Out");
                 ctrl.GetAction<FloatCompare>("After Evade").greaterThan = ctrl.FsmEvents.First(trans => trans.Name == "SLASH");
             }
-            //ctrl.Fsm.SaveActions();
 
             UObject.DestroyImmediate(Grimm.LocateMyFSM("constrain_x"));
             UObject.DestroyImmediate(Grimm.LocateMyFSM("Constrain Y"));
             UObject.DestroyImmediate(Grimm.LocateMyFSM("Stun"));
 
-            //Grimm.SetActive(true);
-            //ctrl.SetState("Init");
             Grimm.GetComponent<HealthManager>().hp = Int32.MaxValue;
             Grimm.GetComponent<HealthManager>().hp = Int32.MaxValue;
 
             var pos = HeroController.instance.transform.position;
-
-            //ctrl.FsmVariables.FindFsmGameObject("Hero Obj").Value = HeroController.instance.gameObject;
-            //ctrl.FsmVariables.FindFsmGameObject("Self").Value = Grimm;
 
             switch (attack)
             {
@@ -665,7 +623,7 @@ namespace VocalKnight.Commands
         }
 
         [HKCommand("sheo")]
-        [Cooldown(CommonVars.cldn)]
+        [Cooldown(CommonVars.cldn * 2)]
         [Summary("Summons Paintmaster Sheo to perform an attack")]
         public void Sheo(string color)
         {
