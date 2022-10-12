@@ -1,6 +1,6 @@
 ﻿# VocalKnight
 
-A mod for Hollow Knight v1.5.x that takes speech input and performs in game actions based on predefined keywords. The mod contains 30+ effects and up to 4 potential keywords per effect. Here is the link to the [keyword index](https://docs.google.com/document/d/1BbaO1pJV2KUgSY1maqH4CtloD41PyoLs0HxU9do1_oc/edit?usp=sharing) which lists all possible effects and their associated triggers. If you plan to stream this content live, I would recommend providing your chatters with command access to the index, with or without first studying it yourself, depending on how stressful you would prefer the initial experience to be.
+A mod for Hollow Knight v1.5.x that takes speech input and performs in game actions based on predefined keywords. The mod contains 60+ effects and up to 4 potential keywords per effect. Here is the link to the [keyword index](https://docs.google.com/document/d/1BbaO1pJV2KUgSY1maqH4CtloD41PyoLs0HxU9do1_oc/edit?usp=sharing) which lists all possible effects and their associated triggers. If you plan to stream this content live, I would recommend providing your chatters with command access to the index, with or without first studying it yourself, depending on how stressful you would prefer the initial experience to be. However, one command you as the player should be aware of is "Neutralize," which undoes any lasting effects, though most spawned game objects will remain. Most effects will self-neutralize upon transitioning between scenes.
 
 ## System Requirements & Setup
 
@@ -38,6 +38,7 @@ The following additional mods are known to be *compatible* with VocalKnight:
 - Custom Knight
 - MoreSaves
 - Randomizer 4
+- EnemyHPBar
 
 The following additional mods are known to be *incompatible* with VocalKnight:
 - HueShifter
@@ -47,11 +48,13 @@ The following additional mods are known to be *incompatible* with VocalKnight:
 
 The mod comes equipped with settings to change the number of potential keywords which may trigger an individual effect (1 to 4 keywords per effect), toggles for enabling and disabling individual effects, and a toggle for the mod itself.
 
-**PLANNED**: A "Randomize" setting which will randomly enable anywhere from 10 to 30 effects and disable the remainder, useful in the event 30+ effects are too overbearing and you as the player would rather leave it up to chance what is active.
+**PLANNED**: A "Randomize" setting which will randomly enable anywhere from 10 to 30 effects and disable the remainder, useful in the event 60+ effects are too overbearing and you as the player would rather leave it up to chance what is active.
 
-## Word of Warning
+## Words of Warning
 
 One of the effects plays music which does not originate from Hollow Knight. The exerpt is from [Funky Dealer by Hideki Naganuma](https://www.youtube.com/watch?v=CwE2k0HMDfo), an original track from the SEGA videogame Jet Set Radio Future. AFAIK the song will not trigger a DMCA violation or otherwise create problems for those of you who wish to stream and/or record gameplay with this mod. However, that is still a risk you assume, and I bear no responsibility for what happens. If you are uncomfortable using the track, you can disable the "PARTY" effect in the mod settings.
+
+The mod, as it is still in beta, does have some persistent/known bugs. Every now and then the speech recognizer engine will freeze up, but it should restart on its own after 20 seconds. Certain iterations of the mod have caused the game to crash when quitting to menu, activating a particular effect in an untested location, or toggling the mod in settings. Hopefully if you are beta-testing, Makeit_Hardcore will be watching in stream to help diagnose and hot-fix the issue.  If an issue does arise, especially if the mod crashes, it would be greatly appreciated if you could provide your modlog.txt and player.log files to Makeit_Hardcore for hot-fixes and future revisions.
 
 ## Credits
 
@@ -68,3 +71,4 @@ While this mod was fully developed by Makeit_Hardcore, much of the underlying co
 And lastly, a big shoutout to my beta-testers:
 - [spilled_oj_](https://www.twitch.tv/spilled_oj_)
 - [TheMulhima](https://github.com/TheMulhima)
+- [Fireb0rn](https://www.youtube.com/c/fireb0rngg)

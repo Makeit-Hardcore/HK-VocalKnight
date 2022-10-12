@@ -45,12 +45,50 @@ namespace VocalKnight
                         "Mod Enabled",
                         ""),
                     new HorizontalOption(
+                        "Difficulty",
+                        "Adjusts the settings below to defined presets",
+                        new string[] {"ATTUNED","ASCENDED","RADIANT","CUSTOM"},
+                        (setting) =>
+                        {
+                            GS.difficulty = setting;
+                            GS.SetDiffPreset();
+
+                            MenuRef.Find("One At A Time").Update();
+                            MenuRef.Find("Word Matching").Update();
+                            MenuRef.Find("Maximum Potential Keywords").Update();
+                        },
+                        () => GS.difficulty),
+                    new HorizontalOption(
+                        "One At A Time",
+                        "Only one effect can be active at any given time",
+                        new string[] {"OFF", "ON"},
+                        (setting) =>
+                        {
+                            GS.oneAtATime = setting;
+                            GS.difficulty = 3;
+                            MenuRef.Find("Difficulty").Update();
+                        },
+                        () => GS.oneAtATime),
+                    new HorizontalOption(
+                        "Word Matching",
+                        "Detect keywords within words? (ie \"GO\" within \"GOAT\")",
+                        new string[] {"CONTAINS","EXACT"},
+                        (setting) =>
+                        {
+                            GS.wordMatching = setting;
+                            GS.difficulty = 3;
+                            MenuRef.Find("Difficulty").Update();
+                        },
+                        () => GS.wordMatching),
+                    new HorizontalOption(
                         "Maximum Potential Keywords",
                         "The max number of potential keywords that can set off an effect",
                         new string[] {"1","2","3","4"},
                         (setting) =>
                         {
                             GS.potentialKWs = setting + 1;
+                            GS.difficulty = 3;
+                            MenuRef.Find("Difficulty").Update();
                         },
                         () => GS.potentialKWs - 1),
                     Blueprints.NavigateToMenu(
@@ -61,7 +99,40 @@ namespace VocalKnight
             }
             if (ToggleMenuRef == null)
             {
-                ToggleMenuRef = new Menu("VocalKnight Effects", new Element[] { });
+                ToggleMenuRef = new Menu("VocalKnight Effects", new Element[]
+                { 
+                    new MenuRow(
+                        new List<Element>()
+                        {
+                            new MenuButton(
+                                "TURN ALL ON",
+                                "",
+                                (_) =>
+                                {
+                                    List<string> keys = GS.commandToggles.Keys.ToList();
+                                    foreach (string key in keys)
+                                    {
+                                        GS.commandToggles[key] = true;
+                                        ToggleMenuRef.Find(key).Update();
+                                    }
+                                    GS.difficulty = 3;
+                                }),
+                            new MenuButton(
+                                "TURN ALL OFF",
+                                "",
+                                (_) =>
+                                {
+                                    List<string> keys = GS.commandToggles.Keys.ToList();
+                                    foreach (string key in keys)
+                                    {
+                                        GS.commandToggles[key] = false;
+                                        ToggleMenuRef.Find(key).Update();
+                                    }
+                                    GS.difficulty = 3;
+                                })
+                        },
+                        "Enable Disable")
+                });
                 foreach (string command in GS.commandToggles.Keys)
                 {
                     string summary = "";
@@ -77,6 +148,8 @@ namespace VocalKnight
                         (setting) =>
                         {
                             GS.commandToggles[command] = Convert.ToBoolean(setting);
+                            GS.difficulty = 3;
+                            MenuRef.Find("Difficulty").Update();
                         },
                         () => Convert.ToInt16(GS.commandToggles[command])));
                 }
@@ -135,7 +208,7 @@ namespace VocalKnight
                                Find("HudCamera/Hud Canvas/Geo Counter/Geo Text").gameObject);
             UObject.DontDestroyOnLoad(dictText);
             dictText.name = "dictationTextDisplay";
-            dictText.transform.SetPosition3D(-11.3f, -7.5f, 0.21f);
+            dictText.transform.SetPosition3D(-11.3f, -8.5f, 0.21f);
             UObject.Destroy(dictText.GetComponent<PlayMakerFSM>());
             dictText.GetComponent<TextMesh>().fontSize = 35;
             dictText.GetComponent<TextMesh>().text = "";
@@ -265,11 +338,19 @@ namespace VocalKnight
         {
             UObject.Destroy(kp);
             UObject.Destroy(dictText);
+
+            if (HeroController.instance != null)
+            {
+                Emoter emoter;
+                HeroController.instance.TryGetComponent(out emoter);
+                UObject.Destroy(emoter);
+            }
+
             recognizer.ForceDestroy();
             recognizer.runner.StopAllCoroutines();
             recognizer = null;
             GC.Collect();
-            UObject.Destroy(HeroController.instance.GetComponent<Emoter>());
+
             ModHooks.AfterPlayerDeadHook -= CancelEffects;
             On.HeroController.Awake -= OnHeroControllerAwake;
             RecognizerUtil.foundCommands.CollectionChanged -= ExecuteCommands;

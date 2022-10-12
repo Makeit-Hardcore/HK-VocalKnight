@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections;
 using System.Collections.ObjectModel;
 using System.Collections.Generic;
@@ -173,7 +174,7 @@ namespace VocalKnight.Utils
         public void Result(string text, ConfidenceLevel confidence)
         {
             Logger.Log("Result: " + text);
-
+            /*
             string textFormatted = "";
             int lineLen = 0;
             List<string> kws;
@@ -249,7 +250,7 @@ namespace VocalKnight.Utils
             }
 
             VocalKnight.Instance.dictText.GetComponent<TextMesh>().text = textFormatted;
-            foundCommands.Clear();
+            foundCommands.Clear();*/
         }
 
         public void Completion(DictationCompletionCause cause)
@@ -290,10 +291,29 @@ namespace VocalKnight.Utils
 
         public static string[] GetCommands()
         {
-            string[] commands = new string[keywords_1.Count + keywords_2.Count + keywords_3.Count];
+            string[] commands = GetCommandsEasy().Concat(GetCommandsMed()).Concat(GetCommandsHard()).ToArray();
+            Array.Sort(commands, StringComparer.InvariantCulture);
+            return commands;
+        }
+
+        public static string[] GetCommandsEasy()
+        {
+            string[] commands = new string[keywords_1.Count];
             keywords_1.Keys.CopyTo(commands, 0);
-            keywords_2.Keys.CopyTo(commands, keywords_1.Count);
-            keywords_3.Keys.CopyTo(commands, keywords_1.Count + keywords_2.Count);
+            return commands;
+        }
+
+        public static string[] GetCommandsMed()
+        {
+            string[] commands = new string[keywords_2.Count];
+            keywords_2.Keys.CopyTo(commands, 0);
+            return commands;
+        }
+
+        public static string[] GetCommandsHard()
+        {
+            string[] commands = new string[keywords_1.Count];
+            keywords_1.Keys.CopyTo(commands, 0);
             return commands;
         }
 
