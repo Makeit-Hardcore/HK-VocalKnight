@@ -19,15 +19,16 @@ namespace VocalKnight
     {
         private const char Seperator = ' ';
 
-        internal List<Command> Commands { get; }
-        
+        internal static List<Command> Commands { get; } = new List<Command>();
+
         private readonly Dictionary<Type, IArgumentParser> _parsers;
 
         private readonly MonoBehaviour _coroutineRunner;
 
+        public static bool onUniversalCooldown = false;
+
         public CommandProcessor()
         {
-            Commands = new List<Command>();
             _parsers = new Dictionary<Type, IArgumentParser>();
 
             var go = new GameObject();
@@ -42,15 +43,13 @@ namespace VocalKnight
 
         public void Execute(string command, ReadOnlyCollection<string> blacklist)
         {
-            string[] pieces = command.Split(Seperator);
-
-            if (!VocalKnight.GS.commandToggles.Keys.Contains(pieces[0]))
-                throw new KeyNotFoundException("Requested command " + pieces[0] + " was not found in settings.");
-            if (!VocalKnight.GS.commandToggles[pieces[0]])
+            if (HeroController.instance == null)
             {
-                Logger.LogWarn("Requested command " + pieces[0] + " is disabled in settings.");
+                Logger.Log("HeroController instance has not yet been instantiated");
                 return;
             }
+
+            string[] pieces = command.Split(Seperator);
 
             IOrderedEnumerable<Command> found = Commands
                                                 .Where(x => x.Name.Equals(pieces[0], StringComparison.InvariantCultureIgnoreCase))
@@ -60,11 +59,13 @@ namespace VocalKnight
             {
                 if (c.Preconditions.FirstOrDefault() is CooldownAttribute cooldown)
                 {
+                    if (VocalKnight.GS.oneAtATime && !onUniversalCooldown)
+                        CooldownTimer(cooldown.Cooldown.TotalSeconds);
+
                     double secRemaining = (cooldown.ResetTime - DateTimeOffset.Now).TotalSeconds;
                     if (secRemaining > 0)
                     {
                         Logger.LogWarn("Cooldown for command " + c.Name + " still has " + secRemaining + " seconds remaining.");
-                        RecognizerUtil.commandOnCooldown = true;
                         continue;
                     }
                 }
@@ -109,6 +110,29 @@ namespace VocalKnight
                     Logger.Log(e.ToString());
                 }
             }
+        }
+
+        public static bool OnCooldown(string command)
+        {
+            string[] pieces = command.Split(Seperator);
+
+            IOrderedEnumerable<Command> found = Commands
+                                                .Where(x => x.Name.Equals(pieces[0], StringComparison.InvariantCultureIgnoreCase))
+                                                .OrderByDescending(x => x.Priority);
+
+            foreach (Command c in found)
+            {
+                if (c.Preconditions.FirstOrDefault() is CooldownAttribute cooldown)
+                {
+                    double secRemaining = (cooldown.ResetTime - DateTimeOffset.Now).TotalSeconds;
+                    if (secRemaining > 0)
+                    {
+                        Logger.LogWarn("Cooldown for command " + c.Name + " still has " + secRemaining + " seconds remaining.");
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
 
         private bool BuildArguments(IEnumerable<string> args, Command command, out object[] parsed)
@@ -192,6 +216,20 @@ namespace VocalKnight
 
                 Logger.Log($"Added command: {attr.Name}");
             }
+        }
+
+        private IEnumerator CooldownTimer(double timeAmount)
+        {
+            onUniversalCooldown = true;
+
+            double timer = timeAmount;
+            while (timer > 0f)
+            {
+                timer -= Time.deltaTime;
+                yield return null;
+            }
+
+            onUniversalCooldown = false;
         }
     }
 }

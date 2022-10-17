@@ -7,7 +7,7 @@ namespace VocalKnight.Settings
 	public class GSets
 	{
 		public int difficulty = 0;
-		public int oneAtATime;
+		public bool oneAtATime;
 		public int wordMatching;
 		public int potentialKWs;
 		public Dictionary<string, bool> commandToggles;
@@ -52,20 +52,20 @@ namespace VocalKnight.Settings
 			switch (difficulty)
             {
 				case 0: //ATTUNED (EASY)
-					oneAtATime = 1;
-					wordMatching = 1;
+					oneAtATime = true;
+					wordMatching = 0;
 					potentialKWs = 1;
 					kws = RecognizerUtil.GetCommandsEasy();
 					break;
 				case 1: //ASCENDED (MEDIUM)
-					oneAtATime = 1;
-					wordMatching = 0;
+					oneAtATime = false;
+					wordMatching = 1;
 					potentialKWs = 2;
 					kws = RecognizerUtil.GetCommandsEasy().Concat(RecognizerUtil.GetCommandsMed()).ToArray();
 					break;
 				case 2: //RADIANT (HARD)
-					oneAtATime = 0;
-					wordMatching = 0;
+					oneAtATime = false;
+					wordMatching = 2;
 					potentialKWs = 4;
 					kws = commandToggles.Keys.ToArray();
 					break;

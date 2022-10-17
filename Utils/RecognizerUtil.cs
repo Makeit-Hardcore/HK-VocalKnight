@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Globalization;
 using System.Collections;
 using System.Collections.ObjectModel;
 using System.Collections.Generic;
@@ -21,8 +22,7 @@ namespace VocalKnight.Utils
         private const float timerMax = 20f;
 
         public static ObservableCollection<string> foundCommands = new ObservableCollection<string>();
-        
-        public static bool commandOnCooldown = false;
+
         private static int runcount = 0;
 
         /* Dict{ command, (list of keywords) }
@@ -31,85 +31,80 @@ namespace VocalKnight.Utils
         private static Dictionary<string, List<string>> keywords_1 = new Dictionary<string, List<string>>()
         {
             { "reset", new List<string>() {"neutralize"} },
-            { "cameffect Invert", new List<string>() {"switch","invert"} },
+            { "grub", new List<string>() {"grub","mimic","god","academy"} },
+            { "wind", new List<string>() {"push","blow","wind"} },
+            { "invertcontrols", new List<string>() {"turn","wrong"} },
+            { "bounce", new List<string>() {"bounc","shroom","fung"} },
             { "cameffect Pixelate", new List<string>() {"old","retro","censor","pixel"} },
             { "sleep", new List<string>() {"tired","sleep","drowsy"} },
-            { "wind", new List<string>() {"push","blow","wind"} },
-            { "invertcontrols", new List<string>() {"1","turn","wrong"} },
-            { "slippery", new List<string>() {"1","wet","slip","water","hydrate"} },
-            { "timescale 0.5", new List<string>() {"1","slow"} },
-            { "hwurmpU", new List<string>() {"1","pretty","curse","ugly" } },
-            { "walkspeed 0.5", new List<string>() {"1","walk","jog"} },
-            { "sheo purple", new List<string>() {"1","purple","violet","lavender","royal"} },
-            { "sheo blue", new List<string>() {"1","blue","cyan","indigo","deep"} },
-            { "geo", new List<string>() {"1","geo","money","coin"} },
-            { "bounce", new List<string>() {"1","bounc","shroom","fung"} },
-            { "grub", new List<string>() {"1","grub","mimic","god","academy"} },
-            { "disable superdash", new List<string>() {"1","heart"} },
-            { "disable claw", new List<string>() {"1","wall","claw","cling"} },
-            { "disable wings", new List<string>() {"1","wing","double"} },
-            { "disable dnail", new List<string>() {"1","dream"} },
-            { "setText Potty Mouth ", new List<string>() {"1","***","damn"} },
-            { "enemy crystal", new List<string>() {"1","shoot","crystal"} },
-            { "enemy petra", new List<string>() {"1","disc","blade","petra"} },
-            { "enemy roller", new List<string>() {"1","roll"} },
-            { "grimmchild", new List<string>() {"1","child","kid","follow","chase"} }
+            { "slippery", new List<string>() {"wet","slip","water","hydrate"} },
+            { "sheo purple", new List<string>() {"purple","violet","lavender","royal"} },
+            { "sheo blue", new List<string>() {"blue","cyan","indigo","deep"} },
+            { "geo", new List<string>() {"geo","money","coin"} },
+            { "disable claw", new List<string>() {"wall","claw","cling"} },
+            { "disable wings", new List<string>() {"wing","double"} },
+            { "disable dnail", new List<string>() {"dream"} },
+            { "disable superdash", new List<string>() {"heart"} },
+            { "grimmchild", new List<string>() {"child","kid","follow","chase"} },
+            { "enemy crystal", new List<string>() {"shoot","crystal"} },
+            { "enemy petra", new List<string>() {"disc","blade","petra"} },
+            { "enemy roller", new List<string>() {"roll"} },
+            { "cameffect Invert", new List<string>() {"switch","invert"} },
+            { "walkspeed 0.5", new List<string>() {"walk","jog"} },
+            { "timescale 0.5", new List<string>() {"slow"} },
+            { "hwurmpU", new List<string>() {"pretty","curse","ugly" } }
         };
         private static Dictionary<string, List<string>> keywords_2 = new Dictionary<string, List<string>>()
         {
-            { "enemy angrybuzzer", new List<string>() {"2","angry","mad","furious"} },
-            { "timewarp", new List<string>() {"2","time","move","warp"} },
-            { "aspidrancher", new List<string>() {"2","spit","primal","triple","aspid"} },
-            { "walkspeed 2.5", new List<string>() {"2","run","sprint"} },
-            { "enemy drillbee", new List<string>() {"2","sting","screw","drill"} },
-            { "spikefloor", new List<string>() {"2","point","spike"} },
-            { "party", new List<string>() {"2","party","dab","hard","core"} },
-            { "bees", new List<string>() {"2", "bee","bea","hive"} },
-            { "lasers", new List<string>() {"2","peak","peek","laser"} },
-            { "disable dash", new List<string>() {"2","dash"} },
-            { "radiance", new List<string>() {"2","light","sphere","orb","lite"} },
-            { "cameffect Flip", new List<string>() {"2","flip"} },
-            { "cameffect Nausea", new List<string>() {"2","wave","dizzy","blur"} },
-            { "cameffect Mirror", new List<string>() {"2","two","mirror"} },
-            { "cameffect Zoom", new List<string>() {"2","close","zoom"} },
-            { "nopogo", new List<string>() {"2","pogo","down"} },
-            { "nailscale 0.5", new List<string>() {"2","small","tiny"} },
-            { "zap", new List<string>() {"2","shock","electric","volt","zap"} },
-            { "jars", new List<string>() {"2","trap","jar","collect","enemy"} },
-            { "sheo red", new List<string>() {"2","red","pink","brick","crimson"} },
-            { "sheo yellow", new List<string>() {"2","yellow","gold","dandelion","banana"} }
+            { "party", new List<string>() {"party","dab","hard","core"} },
+            { "bees", new List<string>() {"bee","bea","hive"} },
+            { "lasers", new List<string>() {"peak","peek","laser"} },
+            { "timewarp", new List<string>() {"time","move","warp"} },
+            { "aspidrancher", new List<string>() {"spit","primal","triple","aspid"} },
+            { "sheo red", new List<string>() {"red","pink","brick","crimson"} },
+            { "sheo yellow", new List<string>() {"yellow","gold","dandelion","banana"} },
+            { "enemy drillbee", new List<string>() {"sting","screw","drill"} },
+            { "spikefloor", new List<string>() {"point","spike"} },
+            { "disable dash", new List<string>() {"dash"} },
+            { "radiance", new List<string>() {"light","sphere","orb","lite"} },
+            { "cameffect Nausea", new List<string>() {"wave","dizzy","blur"} },
+            { "cameffect Zoom", new List<string>() {"close","zoom"} },
+            { "cameffect Flip", new List<string>() {"flip"} },
+            { "cameffect Mirror", new List<string>() {"two","mirror"} },
+            { "nailscale 0.5", new List<string>() {"small","tiny"} },
+            { "zap", new List<string>() {"shock","electric","volt","zap"} },
+            { "jars", new List<string>() {"trap","jar","collect","enemy"} },
+            { "enemy angrybuzzer", new List<string>() {"angry","mad","furious"} },
+            { "walkspeed 2.5", new List<string>() {"run","sprint"} },
+            { "nopogo", new List<string>() {"pogo","down"} }
         };
         private static Dictionary<string, List<string>> keywords_3 = new Dictionary<string, List<string>>()
         {
-            { "ax2uBlind", new List<string>() {"3","dark","blind","daniel"} },
-            { "timescale 1.5", new List<string>() {"3","fast"} },
-            { "bindings", new List<string>() {"3","bind","pantheon","chain"} },
-            { "respawn", new List<string>() {"3","hurt","ouch"} },
-            { "bench", new List<string>() {"3","bench","rest","spawn"} },
-            { "die", new List<string>() {"3","die","dead","death","dye"} },
-            { "gravup", new List<string>() {"3","up","top","gravit"} },
-            { "nonail", new List<string>() {"3","nail","swing"} },
-            { "noheal", new List<string>() {"3","focus","heal"} },
-            { "nailonly", new List<string>() {"3","spell","shaman","shriek","dive"} },
-            { "doubledamage", new List<string>() {"3","damage","fragile","weak","week"} },
-            { "purevessel", new List<string>() {"3","night","white","pure","vessel"} },
-            { "revek", new List<string>() {"3","grave","attack","ghost","protect"} },
-            { "belfly", new List<string>() {"3","fly","explod","annoy","boom"} },
-            { "marmu", new List<string>() {"3","mar","ball","cat"} },
-            //{ "enemy hu", new List<string>() {"who","flat","pancake"} }, //FIX
-            { "gorb", new List<string>() {"3","brain","ascend","rise"} }, //FIX
-            //{ "enemy noeyes", new List<string>() {"eye","baby"} }, //FIX
-            //{ "enemy galien", new List<string>() {"spin","alien"} }, //FIX
-            { "xero", new List<string>() {"3","zero","none","nothing"} },
-            //{ "enemy markoth", new List<string>() {"shield","mark"} }, //FIX
-            { "nightmare", new List<string>() {"3","grim","fire","bat","flame"} },
-            { "enemy bigbee", new List<string>() {"3","big","large","unit"} },
-            { "enemy kingsmould", new List<string>() {"3","king","guard","mold","mould"} },
-            //{ "enemy radiance", new List<string>() {"god","rad","raid","moth"} }, //FIX
-            { "hungry", new List<string>() {"3","hungry","food","hunger","starv"} },
-            { "charmcurse", new List<string>() {"3","charm","equip","notch"} },
-            { "jelly", new List<string>() {"3","jelly","fog","spill","orange"} }
+            { "jelly", new List<string>() {"jelly","fog","spill","orange"} },
+            { "revek", new List<string>() {"grave","attack","ghost","protect"} },
+            { "ax2uBlind", new List<string>() {"dark","blind","daniel"} },
+            { "timescale 1.5", new List<string>() {"fast"} },
+            { "bindings", new List<string>() {"bind","pantheon","chain"} },
+            { "belfly", new List<string>() {"fly","explod","annoy","boom"} },
+            { "marmu", new List<string>() {"mar","ball","cat"} },
+            { "gorb", new List<string>() {"brain","ascend","rise"} },
+            { "xero", new List<string>() {"zero","none","nothing"} },
+            { "respawn", new List<string>() {"hurt","ouch"} },
+            { "nonail", new List<string>() {"nail","swing"} },
+            { "noheal", new List<string>() {"focus","heal"} },
+            { "nailonly", new List<string>() {"spell","shaman","shriek","dive"} },
+            { "doubledamage", new List<string>() {"damage","fragile","weak","week"} },
+            { "purevessel", new List<string>() {"night","white","pure","vessel"} },
+            { "nightmare", new List<string>() {"grim","fire","bat","flame"} },
+            { "hungry", new List<string>() {"hungry","food","hunger","starv"} },
+            { "charmcurse", new List<string>() {"charm","equip","notch"} },
+            { "enemy bigbee", new List<string>() {"big","large","unit"} },
+            { "enemy kingsmould", new List<string>() {"king","guard","mold","mould"} },
+            { "gravup", new List<string>() {"up","top","gravit"} },
+            { "bench", new List<string>() {"bench","rest","spawn"} },
+            { "die", new List<string>() {"die","dead","death","dye"} }
         };
+        private static Dictionary<string, List<string>> keywords_all;
 
 		public RecognizerUtil()
 		{
@@ -121,6 +116,8 @@ namespace VocalKnight.Utils
             statusUpdate += new StatusUpdateHandler(TimerReset);
             runner.StartCoroutine(FreezeTimer());
 
+            UpdateKeywords_All();
+            SetTextVars();
             NewRecognizer();
         }
 
@@ -143,6 +140,8 @@ namespace VocalKnight.Utils
             //dictRecognizer.AutoSilenceTimeoutSeconds = 10f;
             //dictRecognizer.InitialSilenceTimeoutSeconds = 20f;
 
+            if (dictRecognizer.Status == SpeechSystemStatus.Running)
+                KillRecognizer();
             dictRecognizer.Start();
         }
 
@@ -163,95 +162,226 @@ namespace VocalKnight.Utils
             else Logger.LogWarn("Tried to kill Recognizer, but found NULL");
         }
 
+        private const int confirmBuffer = 4;
+        private int searchIndex;
+        private string line;
+        private List<string> choppedLine = new List<string>();
+        private Queue<string[]> inputBuffer = new Queue<string[]>();
+
+        private void SetTextVars()
+        {
+            searchIndex = 0;
+            line = " ";
+            choppedLine.Clear();
+            choppedLine.Add(" ");
+            inputBuffer.Clear();
+        }
+
         public void Hypothesis(string text)
         {
             if (statusUpdate != null)
                 statusUpdate(this, new EventArgs());
 
-            VocalKnight.Instance.dictText.GetComponent<TextMesh>().text = text;
+            Logger.Log("HYP: " + text);
+
+            int countNewWords = 0;
+            string[] splitText = text.Split(' ');
+            if (inputBuffer.Count() == confirmBuffer - 1)
+            {
+                while (searchIndex < inputBuffer.First().Count())
+                {
+                    bool allMatch = true;
+                    foreach (string[] storedText in inputBuffer)
+                    {
+                        if (storedText[searchIndex] != splitText[searchIndex])
+                        {
+                            allMatch = false;
+                            break;
+                        }
+                    }
+                    if (allMatch)
+                    {
+                        line += splitText[searchIndex];
+                        if (line.Length > 80)
+                        {
+                            if (countNewWords != 0) break;
+                            line = " " + splitText[searchIndex];
+                            choppedLine.Clear();
+                            choppedLine.Add(" ");
+                        }
+                        line += " ";
+                        choppedLine[choppedLine.Count() - 1] += splitText[searchIndex] + " ";
+                        searchIndex++;
+                        countNewWords++;
+                    } else
+                    {
+                        break;
+                    }
+                }
+                inputBuffer.Enqueue(splitText);
+                inputBuffer.Dequeue();
+            }
+            else if (inputBuffer.Count() > confirmBuffer - 1)
+            {
+                Logger.LogError("Input buffer queue got too big!");
+                return;
+            }
+            else
+            {
+                inputBuffer.Enqueue(splitText);
+            }
+
+            if (inputBuffer.Count() == confirmBuffer - 1)
+                ProcessText();
+
+            string dispLine = line;
+            string fText = String.Join("", choppedLine.ToArray());
+            for (int n = searchIndex; n < text.Split(' ').Length; n++)
+            {
+                dispLine += splitText[n];
+                if (dispLine.Length > 80)
+                {
+                    break;
+                } else
+                {
+                    fText += splitText[n];
+                }
+                fText += " ";
+                dispLine += " ";
+            }
+
+            Logger.Log("Display text: " + fText);
+            VocalKnight.Instance.dictText.GetComponent<TextMesh>().text = fText;
         }
 
         public void Result(string text, ConfidenceLevel confidence)
         {
-            Logger.Log("Result: " + text);
-            /*
-            string textFormatted = "";
-            int lineLen = 0;
-            List<string> kws;
-            foreach (string word in text.Split(' '))
+            bool resetFlag = true;
+
+            Logger.Log("RES: " + text);
+
+            int countNewWords = 0;
+            string[] splitText = text.Split(' ');
+            while (searchIndex < splitText.Count())
             {
-                string wordBuff = "";
-                if (HeroController.instance != null && HeroController.instance.CanInput())
+                line += splitText[searchIndex];
+                if (line.Length > 80)
                 {
-                    foreach (string command in keywords.Keys)
+                    if (countNewWords != 0)
                     {
-                        if (foundCommands.Contains(command)) continue;
-
-                        bool found = false;
-
-                        //Get our list of potential keywords
-                        try
-                        {
-                            kws = keywords[command].GetRange(0, VocalKnight.GS.potentialKWs);
-                        }
-                        catch //ArgumentOutOfRangeException
-                        {
-                            kws = keywords[command];
-                        }
-
-                        //Try to match those keywords to the current word
-                        foreach (string keyword in kws)
-                        {
-                            if (word.Contains(keyword))
-                            {
-                                found = true;
-                                Logger.Log("Executing command: " + command);
-                                VocalKnight.Instance.Processor.Execute(command, null);
-
-                                string splitA = "";
-                                string splitB = "";
-
-                                int lenA = word.IndexOf(keyword);
-                                if (lenA > 0)
-                                    splitA = word.Substring(0, word.IndexOf(keyword));
-
-                                int lenB = word.Length - (word.IndexOf(keyword) + keyword.Length);
-                                if (lenB > 0)
-                                    splitB = word.Substring(word.IndexOf(keyword) + keyword.Length, lenB);
-
-                                if (commandOnCooldown)
-                                    wordBuff = splitA + "<color=cyan>" + keyword + "</color>" + splitB;
-                                else
-                                    wordBuff = splitA + "<color=red>" + keyword + "</color>" + splitB;
-
-                                commandOnCooldown = false;
-                                break;
-                            }
-                        }
-
-                        if (found)
-                        {
-                            foundCommands.Add(command);
-                            break;
-                        }
+                        runner.StartCoroutine(RecallResult(text, confidence));
+                        resetFlag = false;
+                        break;
                     }
+                    line = " " + splitText[searchIndex];
+                    choppedLine.Clear();
+                    choppedLine.Add(" ");
                 }
-
-                if (wordBuff == "") wordBuff = word;
-
-                lineLen += word.Length;
-                if (lineLen > 80)
-                {
-                    lineLen = word.Length;
-                    textFormatted += "\n";
-                }
-                lineLen += 1;
-                textFormatted += wordBuff + " ";
+                line += " ";
+                choppedLine[choppedLine.Count() - 1] += splitText[searchIndex] + " ";
+                searchIndex++;
+                countNewWords++;
             }
 
-            VocalKnight.Instance.dictText.GetComponent<TextMesh>().text = textFormatted;
-            foundCommands.Clear();*/
+            ProcessText();
+            Logger.Log("Display text: " + String.Join("", choppedLine.ToArray()));
+            VocalKnight.Instance.dictText.GetComponent<TextMesh>().text = String.Join("", choppedLine.ToArray());
+
+            if (resetFlag) SetTextVars();
         }
+
+        private IEnumerator RecallResult(string text, ConfidenceLevel confidence)
+        {
+            yield return null;
+            Result(text, confidence);
+        }
+
+        private void ProcessText()
+        {
+            foreach (string command in keywords_all.Keys)
+            {
+                List<string> keywords;
+                try
+                {
+                    keywords = keywords_all[command].GetRange(0, VocalKnight.GS.potentialKWs);
+                }
+                catch (ArgumentException e)
+                {
+                    keywords = keywords_all[command];
+                }
+                foreach (string kw in keywords)
+                {
+                    int chunkCount = choppedLine.Count;
+                    int i = -1;
+                    while (++i < chunkCount)
+                    {
+                        string chunk = choppedLine[i];
+                        if (chunk.Contains("color="))
+                            continue;
+                        switch (VocalKnight.GS.wordMatching)
+                        {
+                            case 0: //ATTUNED (EASY) - Exact
+                                if (chunk.Contains(" " + kw + " "))
+                                    HypothesisHelper(ref chunkCount, chunk, chunk.IndexOf(kw), kw.Length, i, command, kw);
+                                break;
+                            case 1: //ASCENDED (MEDIUM) - Contains
+                                if (chunk.Contains(kw))
+                                    HypothesisHelper(ref chunkCount, chunk, chunk.IndexOf(kw), kw.Length, i, command, kw);
+                                break;
+                            case 2: //RADIANT (HARD) - Contains, ignore spaces
+                                int kwIndex;
+                                if (ComplexContains(chunk, kw, out kwIndex))
+                                {
+                                    string splitKW = "";
+                                    int diff = 0, j = 0;
+                                    while (j < kw.Length + diff)
+                                    {
+                                        splitKW += chunk[kwIndex + j];
+                                        if (chunk[kwIndex + j] != kw[j - diff]) diff++;
+                                        j++;
+                                    }
+                                    HypothesisHelper(ref chunkCount, chunk, kwIndex, j, i, command, splitKW);
+                                }
+                                break;
+                            default:
+                                Logger.LogError("Word Matching set to unknown value: " + VocalKnight.GS.wordMatching);
+                                return;
+                        }
+                        foundCommands.Clear();
+                    }
+                }
+            }
+        }
+
+        private static bool ComplexContains(string source, string sub, out int index)
+        {
+            index = CultureInfo.InvariantCulture.CompareInfo.IndexOf(source, sub, CompareOptions.IgnoreSymbols);
+            return index != -1;
+        }
+
+        private void HypothesisHelper(ref int chunkCount, string chunk, int kwIndex, int kwLen, int i, string command, string kw)
+        {
+            if (CommandProcessor.onUniversalCooldown || CommandProcessor.OnCooldown(command))
+            {
+                choppedLine[i] = "<color=cyan>" + kw + "</color>";
+            }
+            else
+            {
+                choppedLine[i] = "<color=red>" + kw + "</color>";
+                foundCommands.Add(command);
+            }
+            if (kwIndex != chunk.Length - kwLen)
+            {
+                choppedLine.Insert(i + 1, chunk.Substring(kwIndex + kwLen));
+                chunkCount++;
+            }
+            if (kwIndex != 0)
+            {
+                choppedLine.Insert(i, chunk.Substring(0, kwIndex));
+                chunkCount++;
+            }
+        }
+
 
         public void Completion(DictationCompletionCause cause)
         {
@@ -312,9 +442,31 @@ namespace VocalKnight.Utils
 
         public static string[] GetCommandsHard()
         {
-            string[] commands = new string[keywords_1.Count];
-            keywords_1.Keys.CopyTo(commands, 0);
+            string[] commands = new string[keywords_3.Count];
+            keywords_3.Keys.CopyTo(commands, 0);
             return commands;
+        }
+
+        public static void UpdateKeywords_All()
+        {
+            keywords_all = keywords_3.Concat(keywords_2).Concat(keywords_1)
+                                     .ToLookup(x => x.Key, x => x.Value)
+                                     .ToDictionary(x => x.Key, g => g.First());
+
+            List<string> kwKeys = keywords_all.Keys.ToList();
+            foreach (string command in kwKeys)
+            {
+                string baseCommand = command.Split(' ')[0];
+                if (!VocalKnight.GS.commandToggles.ContainsKey(baseCommand))
+                {
+                    Logger.LogError("UpdateKeywords_All could not find base command " + baseCommand + " in commandToggles");
+                    keywords_all.Remove(command);
+                    continue;
+                }
+                // Command is disabled in settings, do not let it pass to the recognizer engine
+                if (!VocalKnight.GS.commandToggles[baseCommand])
+                    keywords_all.Remove(command);
+            }
         }
 
         private void TimerReset(object source, EventArgs e)

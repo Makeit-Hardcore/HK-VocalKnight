@@ -22,6 +22,8 @@ namespace VocalKnight.Commands
 {
     public class Enemies
     {
+        private const int bosshp = 50;
+
         [HKCommand("enemy")]
         [Cooldown(2)]
         [Summary("Spawns a generic enemy from a preset list")]
@@ -40,6 +42,8 @@ namespace VocalKnight.Commands
         {
             GameObject enemy = SpawnEnemyGeneric("marmu");
 
+            enemy.GetComponent<HealthManager>().hp = bosshp;
+
             if (enemy != null)
                 enemy.SetActive(true);
         }
@@ -52,6 +56,8 @@ namespace VocalKnight.Commands
             GameObject xero = SpawnEnemyGeneric("xero");
             if (xero == null)
                 return;
+
+            xero.GetComponent<HealthManager>().hp = bosshp;
 
             GameObject.Destroy(xero.LocateMyFSM("Y Limit"));
             PlayMakerFSM ctrlMov = xero.LocateMyFSM("Movement");
@@ -213,7 +219,7 @@ namespace VocalKnight.Commands
             UObject.Destroy(enemy.GetComponent<PersistentBoolItem>());
 
             //Reduce enemy health
-            enemy.GetComponent<HealthManager>().hp /= 4;
+            enemy.GetComponent<HealthManager>().hp = 10;
 
             //Killing a spawned ghost warrior does not count as defeating the real deal
             if (enemy.name.Contains("Ghost Warrior"))

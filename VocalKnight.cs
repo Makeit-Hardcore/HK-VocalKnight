@@ -56,6 +56,8 @@ namespace VocalKnight
                             MenuRef.Find("One At A Time").Update();
                             MenuRef.Find("Word Matching").Update();
                             MenuRef.Find("Maximum Potential Keywords").Update();
+
+                            RecognizerUtil.UpdateKeywords_All();
                         },
                         () => GS.difficulty),
                     new HorizontalOption(
@@ -64,15 +66,15 @@ namespace VocalKnight
                         new string[] {"OFF", "ON"},
                         (setting) =>
                         {
-                            GS.oneAtATime = setting;
+                            GS.oneAtATime = Convert.ToBoolean(setting);
                             GS.difficulty = 3;
                             MenuRef.Find("Difficulty").Update();
                         },
-                        () => GS.oneAtATime),
+                        () => Convert.ToInt16(GS.oneAtATime)),
                     new HorizontalOption(
                         "Word Matching",
-                        "Detect keywords within words? (ie \"GO\" within \"GOAT\")",
-                        new string[] {"CONTAINS","EXACT"},
+                        "How deeply will the mod search for keywords?",
+                        new string[] {"LET'S <color=red>GO</color>","THE <color=red>GO</color>AT","WRON<color=red>G O</color>RDER"},
                         (setting) =>
                         {
                             GS.wordMatching = setting;
@@ -116,6 +118,8 @@ namespace VocalKnight
                                         ToggleMenuRef.Find(key).Update();
                                     }
                                     GS.difficulty = 3;
+
+                                    RecognizerUtil.UpdateKeywords_All();
                                 }),
                             new MenuButton(
                                 "TURN ALL OFF",
@@ -129,6 +133,8 @@ namespace VocalKnight
                                         ToggleMenuRef.Find(key).Update();
                                     }
                                     GS.difficulty = 3;
+
+                                    RecognizerUtil.UpdateKeywords_All();
                                 })
                         },
                         "Enable Disable")
@@ -137,7 +143,7 @@ namespace VocalKnight
                 {
                     string summary = "";
                     try {
-                        summary = ((SummaryAttribute[])Processor.Commands.Find(x => x.Name.Contains(command))
+                        summary = ((SummaryAttribute[])CommandProcessor.Commands.Find(x => x.Name.Contains(command))
                                     .MethodInfo.GetCustomAttributes(typeof(SummaryAttribute), true))[0].Summary;
                     } catch { }
                     
@@ -150,8 +156,11 @@ namespace VocalKnight
                             GS.commandToggles[command] = Convert.ToBoolean(setting);
                             GS.difficulty = 3;
                             MenuRef.Find("Difficulty").Update();
+
+                            RecognizerUtil.UpdateKeywords_All();
                         },
-                        () => Convert.ToInt16(GS.commandToggles[command])));
+                        () => Convert.ToInt16(GS.commandToggles[command])
+                    ));
                 }
             }
             return MenuRef.GetMenuScreen(modListMenu);
@@ -171,7 +180,7 @@ namespace VocalKnight
             }
         }
 
-        public override string GetVersion() => "0.9.0";
+        public override string GetVersion() => "0.9.1";
 
         public VocalKnight() : base()
         {
@@ -208,7 +217,7 @@ namespace VocalKnight
                                Find("HudCamera/Hud Canvas/Geo Counter/Geo Text").gameObject);
             UObject.DontDestroyOnLoad(dictText);
             dictText.name = "dictationTextDisplay";
-            dictText.transform.SetPosition3D(-11.3f, -8.5f, 0.21f);
+            dictText.transform.SetPosition3D(-13.5f, -8f, 0.21f);
             UObject.Destroy(dictText.GetComponent<PlayMakerFSM>());
             dictText.GetComponent<TextMesh>().fontSize = 35;
             dictText.GetComponent<TextMesh>().text = "";
@@ -255,7 +264,7 @@ namespace VocalKnight
             // No cooldowns configured, let's populate the dictionary.
             if (Cooldowns.Count == 0)
             {
-                foreach (Command c in Processor.Commands)
+                foreach (Command c in CommandProcessor.Commands)
                 {
                     CooldownAttribute cd = c.Preconditions.OfType<CooldownAttribute>().FirstOrDefault();
                     if (cd == null)
@@ -266,7 +275,7 @@ namespace VocalKnight
                 return;
             }
 
-            foreach (Command c in Processor.Commands)
+            foreach (Command c in CommandProcessor.Commands)
             {
                 if (!Cooldowns.TryGetValue(c.Name, out int time))
                     continue;
