@@ -9,9 +9,9 @@ using UnityEngine.Windows.Speech;
 
 namespace VocalKnight.Utils
 {
-	public class RecognizerUtil
-	{
-		private DictationRecognizer dictRecognizer;
+    public class RecognizerUtil
+    {
+        private DictationRecognizer dictRecognizer;
 
         private delegate void StatusUpdateHandler(object sender, EventArgs e);
         private event StatusUpdateHandler statusUpdate;
@@ -22,6 +22,7 @@ namespace VocalKnight.Utils
         private const float timerMax = 20f;
 
         public static ObservableCollection<string> foundCommands = new ObservableCollection<string>();
+        public static event EventHandler<EventArgs> BeforeUpdateKeyWord;
 
         private static int runcount = 0;
 
@@ -104,6 +105,29 @@ namespace VocalKnight.Utils
             { "bench", new List<string>() {"bench","rest","spawn"} },
             { "die", new List<string>() {"die","dead","death","dye"} }
         };
+        private static Dictionary<string, ValueTuple<Dictionary<string, List<string>>, Dictionary<string, List<string>>, Dictionary<string, List<string>>>> langdict = new()
+        {
+            {
+                "en",
+                new ValueTuple<Dictionary<string, List<string>>, Dictionary<string, List<string>>, Dictionary<string, List<string>>>(keywords_1,keywords_2,keywords_3)
+            }
+        };
+        public static void AddLangDict(string lang, ValueTuple<Dictionary<string, List<string>>, Dictionary<string, List<string>>, Dictionary<string, List<string>>> mylangdict)
+        {
+            if(mylangdict.Item1==null)
+            {
+                mylangdict.Item1 = keywords_1;
+            }
+            if (mylangdict.Item2 == null)
+            {
+                mylangdict.Item2 = keywords_2;
+            }
+            if (mylangdict.Item3 == null)
+            {
+                mylangdict.Item3 = keywords_3;
+            }
+            langdict[lang] = mylangdict;
+        }
         private static Dictionary<string, List<string>> keywords_all;
 
 		public RecognizerUtil()
@@ -115,7 +139,6 @@ namespace VocalKnight.Utils
             timer = timerMax;
             statusUpdate += new StatusUpdateHandler(TimerReset);
             runner.StartCoroutine(FreezeTimer());
-
             UpdateKeywords_All();
             SetTextVars();
             NewRecognizer();
@@ -449,7 +472,13 @@ namespace VocalKnight.Utils
 
         public static void UpdateKeywords_All()
         {
-            keywords_all = keywords_3.Concat(keywords_2).Concat(keywords_1)
+            BeforeUpdateKeyWord?.Invoke(VocalKnight.Instance, new EventArgs()); 
+            var currlang = Language.Language.CurrentLanguage().ToString().ToLower();
+            var currkeyword = langdict.TryGetValue(currlang, out var keywordvalue) ? keywordvalue : langdict["en"];
+            var k1 = currkeyword.Item1;
+            var k2 = currkeyword.Item2;
+            var k3 = currkeyword.Item3;
+            keywords_all = k3.Concat(k2).Concat(k1)
                                      .ToLookup(x => x.Key, x => x.Value)
                                      .ToDictionary(x => x.Key, g => g.First());
 

@@ -341,6 +341,7 @@ namespace VocalKnight
         {
             orig.Invoke(self);
             self.gameObject.AddComponent<Emoter>();
+            RecognizerUtil.UpdateKeywords_All();
         }
 
         public void Unload()
