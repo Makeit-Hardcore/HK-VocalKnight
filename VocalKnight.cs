@@ -6,6 +6,8 @@ using System.Collections.Specialized;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Reflection;
 using Satchel.BetterMenus;
 using VocalKnight.Commands;
@@ -227,7 +229,7 @@ namespace VocalKnight
             On.HeroController.Awake += OnHeroControllerAwake;
             RecognizerUtil.foundCommands.CollectionChanged += ExecuteCommands;
 
-            NewRecognizer();
+            recognizer = new RecognizerUtil();
 
             /*kp = new GameObject();
             kp.name = "KeyPressDetector";
@@ -235,11 +237,6 @@ namespace VocalKnight
             kp.AddComponent<KeyPress>();
             */
             Log("Initialized");
-        }
-
-        public void NewRecognizer()
-        {
-            recognizer = new RecognizerUtil();
         }
 
         private void CancelEffects()
@@ -313,6 +310,10 @@ namespace VocalKnight
                             AudioClip audio = WavUtility.ToAudioClip(manifestResourceStream.ReadAllBytes(), text.Split('.')[2]);
                             customAudio.Add(audio.name, audio);
                         }
+                        else if (key == "json")
+                        {
+                            KeyIndexerUtil.GetCredentials(manifestResourceStream).Wait();
+                        }
                         Logger.Log("Loaded new resource: " + text);
                     }
                 }
@@ -335,7 +336,6 @@ namespace VocalKnight
                     break;
             }
         }
-
 
         private void OnHeroControllerAwake(On.HeroController.orig_Awake orig, HeroController self)
         {

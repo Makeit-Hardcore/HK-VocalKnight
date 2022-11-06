@@ -344,10 +344,16 @@
     </ItemGroup>
 
 	<ItemGroup>
-		<EmbeddedResource Include="AssetBundles.emoteslin" />
-		<EmbeddedResource Include="AssetBundles.emotesmac" />
 		<EmbeddedResource Include="AssetBundles.emoteswin" />
 		<EmbeddedResource Include="AudioFiles/*" />
 		<EmbeddedResource Include="Resources/**/*" />
+		<EmbeddedResource Include="credentials.json" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="Google.Apis.Auth" Version="1.57.0" />
+	  <PackageReference Include="Google.Apis.Core" Version="1.57.0" />
+	  <PackageReference Include="Google.Apis.Docs.v1" Version="1.57.0.2833" />
+	  <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
 	</ItemGroup>
 </Project>
