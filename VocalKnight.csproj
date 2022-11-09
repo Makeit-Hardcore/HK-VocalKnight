@@ -94,10 +94,10 @@
             <HintPath>$(HollowKnightRefs)/PlayMaker.dll</HintPath>
         </Reference>
 		<Reference Include="Satchel">
-			<HintPath>E:\Hollow Knight 1.5 Modded\hollow_knight_Data\Managed\Mods\Satchel\Satchel.dll</HintPath>
+			<HintPath>$(HollowKnightRefs)/Mods/Satchel/Satchel.dll</HintPath>
 		</Reference>
 		<Reference Include="SFCore">
-			<HintPath>E:\Hollow Knight 1.5 Modded\hollow_knight_Data\Managed\Mods\SFCore\SFCore.dll</HintPath>
+			<HintPath>$(HollowKnightRefs)/Mods/SFCore/SFCore.dll</HintPath>
 		</Reference>
         <Reference Include="System.ComponentModel.Composition">
             <HintPath>$(HollowKnightRefs)/System.ComponentModel.Composition.dll</HintPath>
@@ -334,7 +334,7 @@
             <HintPath>$(HollowKnightRefs)/UnityEngine.XRModule.dll</HintPath>
         </Reference>
 		<Reference Include="Vasi">
-			<HintPath>E:\Hollow Knight 1.5 Modded\hollow_knight_Data\Managed\Mods\Vasi\Vasi.dll</HintPath>
+			<HintPath>$(HollowKnightRefs)/Mods/Vasi/Vasi.dll</HintPath>
 		</Reference>
     </ItemGroup>
 
