@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace VocalKnight.Components
 {
@@ -40,14 +42,38 @@ namespace VocalKnight.Components
             "person","people","peep","hole","hold","halt","tear","bear","swear","share","care","hair",
             "turtle","tortoise","rune","escape","pair","pants","scissors","apple","micro","soft","hard",
             "cow","pig","chicken","swivel","turn","great","rig","car","skateboard","bus","plane",
-            "airplane","skate","skating","cat","dog","hamster","hunt"
+            "airplane","skate","skating","cat","dog","hamster","hunt","Hip","Person","Each","Peanut",
+            "barbeque","table","pineapple","elephant","noodle","battery","chicken","side","walk",
+            "ceiling","mouse","finger","expose","shy","meter","part","tournament","turn","aunt","mint",
+            "clarify","speak","neighbor","right","left","lazy","kaleidoscope","grit","evil","pop",
+            "straw","berry","bug","mushroom","eagle","valor","clumsy","sound","track","galactic",
+            "fish","gear","ship","ocean","dig","true","growth","protect","recover","comrade"
         };
 
         public static string[] GetWordBase()
         {
-            string[] wordlist = new string[_words.Count];
-            _words.CopyTo(wordlist, 0);
-            return wordlist;
+            return _words.ToArray();
+        }
+
+        public static bool getWords(int num, out string[] selected)
+        {
+            HashSet<string> _choices = new HashSet<string>(_words);
+            List<string> _selected = new List<string>();
+            Random randomizer = new Random();
+            for (int i = 0; i < num; i++) {
+                _selected.Add(_choices.ElementAt(randomizer.Next(_choices.Count)));
+                //If this contains avoidance method takes too long to compute,
+                //rewrite to iteratively verify non-contains when list is complete
+                _choices.RemoveWhere(x => x.Contains(_selected.Last<string>()) || _selected.Last<string>().Contains(x));
+                if (_choices.Count <= 0)
+                {
+                    Logger.LogError("More words demanded than are available!");
+                    selected = null;
+                    return false;
+                }
+            }
+            selected = _selected.ToArray();
+            return true;
         }
     }
 }

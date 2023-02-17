@@ -17,6 +17,7 @@ using VocalKnight.Extensions;
 using VocalKnight.Precondition;
 using VocalKnight.Utils;
 using VocalKnight.Settings;
+using Unity.Collections.LowLevel.Unsafe;
 
 namespace VocalKnight
 {
@@ -38,6 +39,8 @@ namespace VocalKnight
 
         public MenuScreen GetMenuScreen(MenuScreen modListMenu, ModToggleDelegates? modToggleDelegates)
         {
+            bool generated = false;
+
             if (MenuRef == null)
             {
                 MenuRef = new Menu("VocalKnight", new Element[]
@@ -59,7 +62,7 @@ namespace VocalKnight
                             MenuRef.Find("Word Matching").Update();
                             MenuRef.Find("Maximum Potential Keywords").Update();
 
-                            RecognizerUtil.UpdateKeywords_All();
+                            KeywordUtil.UpdateKeywords_All();
                         },
                         () => GS.difficulty),
                     new HorizontalOption(
@@ -98,7 +101,43 @@ namespace VocalKnight
                     Blueprints.NavigateToMenu(
                         "Toggle Individual Effects",
                         "",
-                        () => ToggleMenuRef.GetMenuScreen(MenuRef.menuScreen))
+                        () => ToggleMenuRef.GetMenuScreen(MenuRef.menuScreen)),
+                    new HorizontalOption(
+                        "Keyword Set",
+                        "\'Randomized\' will use the most recent set until you GENERATE a new one",
+                        new string[] {"Default","Randomized"},
+                        (setting) =>
+                        {
+                            GS.kwSet = setting;
+                            if (!generated && setting == 1)
+                            {
+                                MenuRef.Find("GenRand").Show();
+                            }
+                            else
+                            {
+                                MenuRef.Find("GenRand").Hide();
+                            }
+                            KeywordUtil.UpdateKeywords_All();
+                        },
+                        () => GS.kwSet),
+                    new MenuButton(
+                        "GENERATE RANDOMIZED KEYWORD SET",
+                        "Selects 4 unique, random keywords for each effect & creates Google Doc index",
+                        (Mbutton) =>
+                        {
+                            //Hide this button, don't let it show again until the menu is closed and reopened
+                            //Instead show text that doesn't go away until you open the menu again
+                            KeywordUtil.RandomizeKeywords();
+                            KeywordUtil.UpdateKeywords_All();
+                            KeyIndexerUtil.WriteToFile();
+                            MenuRef.Find("GenRand").Hide();
+                            generated = true;
+                            MenuRef.Find("GenText").Show();
+                        },
+                        Id: "GenRand"),
+                    new TextPanel(
+                        "Randomized keyword set generated", //Possible to add check if actually successful?
+                        Id: "GenText")
                 });
             }
             if (ToggleMenuRef == null)
@@ -121,7 +160,7 @@ namespace VocalKnight
                                     }
                                     GS.difficulty = 3;
 
-                                    RecognizerUtil.UpdateKeywords_All();
+                                    KeywordUtil.UpdateKeywords_All();
                                 }),
                             new MenuButton(
                                 "TURN ALL OFF",
@@ -136,7 +175,7 @@ namespace VocalKnight
                                     }
                                     GS.difficulty = 3;
 
-                                    RecognizerUtil.UpdateKeywords_All();
+                                    KeywordUtil.UpdateKeywords_All();
                                 })
                         },
                         "Enable Disable")
@@ -159,12 +198,39 @@ namespace VocalKnight
                             GS.difficulty = 3;
                             MenuRef.Find("Difficulty").Update();
 
-                            RecognizerUtil.UpdateKeywords_All();
+                            KeywordUtil.UpdateKeywords_All();
                         },
                         () => Convert.ToInt16(GS.commandToggles[command])
                     ));
                 }
             }
+
+            if (GS.kwSet == 1 && !generated)
+            {
+                if (GS.customKws == null)
+                {
+                    MenuRef.AddConfirmDialog(
+                        "No Randomized Keyword Set Found",
+                        "You have selected Randomized keyword set, but none exists in memory. Please generate a new keyword set using the \"GENERATE RANDOMIZED KEYWORD SET\" button.",
+                        new string[] { "OK" },
+                        (selection) =>
+                        {
+                            Satchel.BetterMenus.Utils.GoToMenuScreen(MenuRef.menuScreen);
+                        });
+                } else
+                {
+                    MenuRef.AddConfirmDialog(
+                        "Old Keyword Set Detected",
+                        "You have selected Randomized keyword set, but not generated a new one this session. Would you like to use the previous keyword set?",
+                        new string[] { "YES, LET ME PLAY", "NO, I WANT TO GO BACK" },
+                        (selection) =>
+                        {
+                            if (selection == "NO, I WANT TO GO BACK")
+                                Satchel.BetterMenus.Utils.GoToMenuScreen(MenuRef.menuScreen);
+                        });
+                }
+            }
+
             return MenuRef.GetMenuScreen(modListMenu);
         }
 
@@ -206,6 +272,8 @@ namespace VocalKnight
                 Processor.RegisterCommands<Area>();
                 Processor.RegisterCommands<Commands.Camera>();
                 Processor.RegisterCommands<Game>();
+
+                KeywordUtil.UpdateKeywords_All();
 
                 ConfigureCooldowns();
                 LoadAssets();

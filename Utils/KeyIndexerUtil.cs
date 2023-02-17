@@ -38,7 +38,7 @@ namespace VocalKnight.Utils
         public static void WriteToFile()
         {
             Document kwDoc = new Document();
-            string[] commands = RecognizerUtil.GetCommands();
+            string[] commands = KeywordUtil.GetCommands(2);
 
             kwDoc.Title = "VocalKnight Keywords " + DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss");
 
@@ -62,7 +62,7 @@ namespace VocalKnight.Utils
             int index = 2 + (int)insertTableRQ.Rows * 11;
             for (int c = commands.Count() - 1; c >= 0; c--)
             {
-                foreach (string kw in RecognizerUtil.GetKeywords(commands[c]).Reverse<string>())
+                foreach (string kw in KeywordUtil.GetKeywords(commands[c]).Reverse<string>())
                 {
                     CreateTextRQ(ref requests, kw, index);
                     index -= 2;

@@ -10,12 +10,14 @@ namespace VocalKnight.Settings
 		public bool oneAtATime;
 		public int wordMatching;
 		public int potentialKWs;
+		public int kwSet;
 		public Dictionary<string, bool> commandToggles;
+		public Dictionary<string, List<string>>[] customKws;
 		
 		public GSets()
         {
 			commandToggles = new Dictionary<string, bool>();
-			foreach (string command in RecognizerUtil.GetCommands())
+			foreach (string command in KeywordUtil.GetCommands(2))
             {
 				string baseCommand = command.Split(' ')[0];
 				if (!commandToggles.ContainsKey(baseCommand))
@@ -28,7 +30,7 @@ namespace VocalKnight.Settings
 		public void UpdateToggles()
         {
 			List<string> newCommands = new List<string>();
-			foreach (string command in RecognizerUtil.GetCommands())
+			foreach (string command in KeywordUtil.GetCommands(2))
 			{
 				string baseCommand = command.Split(' ')[0];
 				if (!commandToggles.ContainsKey(baseCommand))
@@ -41,33 +43,25 @@ namespace VocalKnight.Settings
 					commandToggles.Remove(oldCommand);
 		}
 
-		public void ToCustom()
-        {
-			difficulty = 3;
-        }
-
 		public void SetDiffPreset()
         {
-			string[] kws = {};
+			string[] kws = KeywordUtil.GetCommands(difficulty);
 			switch (difficulty)
             {
 				case 0: //ATTUNED (EASY)
 					oneAtATime = true;
 					wordMatching = 0;
-					potentialKWs = 1;
-					kws = RecognizerUtil.GetCommandsEasy();
+					potentialKWs = 2;
 					break;
 				case 1: //ASCENDED (MEDIUM)
 					oneAtATime = false;
 					wordMatching = 1;
-					potentialKWs = 2;
-					kws = RecognizerUtil.GetCommandsEasy().Concat(RecognizerUtil.GetCommandsMed()).ToArray();
+					potentialKWs = 3;
 					break;
 				case 2: //RADIANT (HARD)
 					oneAtATime = false;
 					wordMatching = 2;
 					potentialKWs = 4;
-					kws = commandToggles.Keys.ToArray();
 					break;
 				case 3: //CUSTOM
 					break;
