@@ -17,6 +17,7 @@ using SFCoreFSM = SFCore.Utils.FsmUtil;
 using UnityEngine.SceneManagement;
 using USceneManager = UnityEngine.SceneManagement.SceneManager;
 using Vasi;
+using Satchel.Futils;
 
 namespace VocalKnight.Commands
 {
@@ -509,7 +510,7 @@ namespace VocalKnight.Commands
             PlayMakerFSM grimmchildFSM = grimmchildGO.LocateMyFSM("Control");
 
             //Set level to 4
-            grimmchildFSM.SetState("4");
+            grimmchildFSM.GetVariable<FsmInt>("Grimm Level").Value = 4;
 
             //Decrease flameball speed
             grimmchildFSM.FsmVariables.FindFsmFloat("Flameball Speed").Value = 10f;

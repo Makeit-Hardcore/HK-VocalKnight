@@ -104,7 +104,7 @@ namespace VocalKnight
                         () => ToggleMenuRef.GetMenuScreen(MenuRef.menuScreen)),
                     new HorizontalOption(
                         "Keyword Set",
-                        "\'Randomized\' will use the most recent set until you GENERATE a new one",
+                        "\'Randomized\' will use the most recent until you GENERATE a new one",
                         new string[] {"Default","Randomized"},
                         (setting) =>
                         {
@@ -122,7 +122,7 @@ namespace VocalKnight
                         () => GS.kwSet),
                     new MenuButton(
                         "GENERATE RANDOMIZED KEYWORD SET",
-                        "Selects 4 unique, random keywords for each effect & creates Google Doc index",
+                        "Selects 4 random keywords for each effect & creates Google Doc index",
                         (Mbutton) =>
                         {
                             //Hide this button, don't let it show again until the menu is closed and reopened

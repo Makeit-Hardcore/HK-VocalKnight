@@ -634,7 +634,7 @@ namespace VocalKnight.Commands
         }
 
         [HKCommand("gravup")]
-        [Cooldown(CommonVars.cldn * 2)]
+        [Cooldown(CommonVars.cldn / 2)]
         [Summary("Flips gravity upside down")]
         public IEnumerator FlipGravity()
         {
@@ -662,7 +662,7 @@ namespace VocalKnight.Commands
             }
 
             Flip();
-            yield return CoroutineUtil.WaitWithCancel(CommonVars.cldn);
+            yield return CoroutineUtil.WaitWithCancel(0.75f);
             Flip();
         }
 
@@ -929,7 +929,7 @@ namespace VocalKnight.Commands
 
         [HKCommand("timewarp")]
         [Summary("Warps The Knight back to where they were X seconds ago")]
-        [Cooldown(CommonVars.cldn * 2)]
+        [Cooldown(CommonVars.cldn)]
         public IEnumerator Timewarp()
         {
             PlayMakerFSM dreamnailFSM = HeroController.instance.gameObject.LocateMyFSM("Dream Nail");
@@ -945,7 +945,7 @@ namespace VocalKnight.Commands
             audioSource.PlayOneShot(audioSet);
 
             //Wait
-            yield return new WaitForSeconds(5f);
+            yield return new WaitForSeconds(3f);
 
             //Warp to gate (unless in another scene & wait until player is in control)
             HeroController.instance.parryInvulnTimer = 0.6f;
