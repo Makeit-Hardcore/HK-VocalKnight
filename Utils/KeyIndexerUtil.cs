@@ -14,17 +14,24 @@ namespace VocalKnight.Utils
     internal static class KeyIndexerUtil
     {
         private static DocsService service;
+        private static Stream json;
 
-        public async static Task GetCredentials(Stream jsonStream)
+        public static bool SetJson(Stream jsonStream)
         {
-            if (jsonStream == null)
+            if (json == null)
             {
                 Logger.LogError("Json credentials read as null");
-                return;
+                return false;
             }
 
+            json = jsonStream;
+            return true;
+        }
+
+        public static async Task GetCredentials()
+        {
             UserCredential credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
-                                              GoogleClientSecrets.FromStream(jsonStream).Secrets,
+                                              GoogleClientSecrets.FromStream(json).Secrets,
                                               new[] { DocsService.Scope.Documents },
                                               "user", CancellationToken.None);
 
@@ -33,6 +40,11 @@ namespace VocalKnight.Utils
                 HttpClientInitializer = credential,
                 ApplicationName = "VocalKnight",
             });
+        }
+
+        public static bool checkStatus()
+        {
+            return service != null;
         }
 
         public static void WriteToFile()

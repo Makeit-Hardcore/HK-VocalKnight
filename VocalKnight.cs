@@ -23,7 +23,7 @@ namespace VocalKnight
 {
     public class VocalKnight : Mod, IGlobalSettings<GSets>, ICustomMenuMod, ITogglableMod
     {
-        private RecognizerUtil recognizer;
+        public RecognizerUtil recognizer;
         public GameObject dictText;
         private GameObject kp;
         private static bool preloadFlag = false;
@@ -104,12 +104,17 @@ namespace VocalKnight
                         () => ToggleMenuRef.GetMenuScreen(MenuRef.menuScreen)),
                     new HorizontalOption(
                         "Keyword Set",
-                        "\'Randomized\' will use the most recent until you GENERATE a new one",
+                        "\'Randomized\' uses the most recent set until you GENERATE a new one",
                         new string[] {"Default","Randomized"},
                         (setting) =>
                         {
                             GS.kwSet = setting;
-                            if (!generated && setting == 1)
+                            if (setting == 1 && GS.kwSet == null)
+                            {
+                                KeywordUtil.RandomizeKeywords();
+                            }
+
+                            if (setting == 1)
                             {
                                 MenuRef.Find("GenRand").Show();
                             }
@@ -134,10 +139,16 @@ namespace VocalKnight
                             generated = true;
                             MenuRef.Find("GenText").Show();
                         },
-                        Id: "GenRand"),
+                        Id: "GenRand")
+                    {
+                        isVisible = false,
+                    },
                     new TextPanel(
                         "Randomized keyword set generated", //Possible to add check if actually successful?
                         Id: "GenText")
+                    {
+                        isVisible = false,
+                    }
                 });
             }
             if (ToggleMenuRef == null)
@@ -204,7 +215,7 @@ namespace VocalKnight
                     ));
                 }
             }
-
+            /*
             if (GS.kwSet == 1 && !generated)
             {
                 if (GS.customKws == null)
@@ -229,7 +240,7 @@ namespace VocalKnight
                                 Satchel.BetterMenus.Utils.GoToMenuScreen(MenuRef.menuScreen);
                         });
                 }
-            }
+            }*/
 
             return MenuRef.GetMenuScreen(modListMenu);
         }
@@ -299,11 +310,11 @@ namespace VocalKnight
 
             recognizer = new RecognizerUtil();
 
-            /*kp = new GameObject();
+            kp = new GameObject();
             kp.name = "KeyPressDetector";
             UObject.DontDestroyOnLoad(kp);
             kp.AddComponent<KeyPress>();
-            */
+
             Log("Initialized");
         }
 
@@ -380,7 +391,7 @@ namespace VocalKnight
                         }
                         else if (key == "json")
                         {
-                            KeyIndexerUtil.GetCredentials(manifestResourceStream).Wait();
+                            KeyIndexerUtil.SetJson(manifestResourceStream);
                         }
                         Logger.Log("Loaded new resource: " + text);
                     }
@@ -449,7 +460,8 @@ namespace VocalKnight
             if (Input.GetKeyUp(KeyCode.R))
             {
                 Logger.Log("HeroController acceptingInput: " + HeroController.instance.CanInput());
-                //VocalKnight.Instance.NewRecognizer();
+                VocalKnight.Instance.recognizer.ForceDestroy();
+                VocalKnight.Instance.recognizer.NewRecognizer();
             }
         }
     }
