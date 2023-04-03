@@ -109,7 +109,7 @@ namespace VocalKnight
                         (setting) =>
                         {
                             GS.kwSet = setting;
-                            if (setting == 1 && GS.kwSet == null)
+                            if (setting == 1 && GS.customKws == null)
                             {
                                 KeywordUtil.RandomizeKeywords();
                             }
@@ -141,7 +141,7 @@ namespace VocalKnight
                         },
                         Id: "GenRand")
                     {
-                        isVisible = false,
+                        isVisible = Convert.ToBoolean(GS.kwSet),
                     },
                     new TextPanel(
                         "Randomized keyword set generated", //Possible to add check if actually successful?

@@ -198,10 +198,11 @@ namespace VocalKnight.Utils
             if (!WordBase.getWords(4*GetCommands(2).Length, out kw_buff)) return;
             Queue<string> kw_queue = new Queue<string>(kw_buff);
 
-            VocalKnight.GS.customKws = new Dictionary<string, List<string>>[2];
-            for (int i=0; i<2; i++)
+            VocalKnight.GS.customKws = new Dictionary<string, List<string>>[3];
+            for (int i=0; i<=2; i++)
             {
-                foreach (string cmd in VocalKnight.GS.customKws[i].Keys)
+                VocalKnight.GS.customKws[i] = new Dictionary<string, List<string>>();
+                foreach (string cmd in _defaults[i].Keys)
                 {
                     VocalKnight.GS.customKws[i].Add(cmd, new List<string>());
                     for (int n=0; n<4; n++)
