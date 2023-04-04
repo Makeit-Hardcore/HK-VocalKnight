@@ -349,9 +349,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Google.Apis.Auth" Version="1.57.0" />
-	  <PackageReference Include="Google.Apis.Core" Version="1.57.0" />
-	  <PackageReference Include="Google.Apis.Docs.v1" Version="1.57.0.2833" />
-	  <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+	  <PackageReference Include="Google.Apis.Auth" Version="1.60.0" />
+	  <PackageReference Include="Google.Apis.Core" Version="1.60.0" />
+	  <PackageReference Include="Google.Apis.Docs.v1" Version="1.60.0.2979" />
+	  <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 	</ItemGroup>
 </Project>
