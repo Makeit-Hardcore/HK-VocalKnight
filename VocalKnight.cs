@@ -148,7 +148,21 @@ namespace VocalKnight
                         Id: "GenText")
                     {
                         isVisible = false,
-                    }
+                    },
+                    new MenuButton(
+                        "Create Google Doc Index",
+                        "Connects to your Google account to create a keyword index",
+                        (Mbutton) =>
+                        {
+                            KeyIndexerUtil.WriteToFile();
+                        }),
+                    new MenuButton(
+                        "Link Google Account",
+                        "",
+                        (Mbutton) =>
+                        {
+                            //KeyIndexerUtil.GetCredentials().Wait();
+                        })
                 });
             }
             if (ToggleMenuRef == null)

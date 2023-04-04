@@ -18,20 +18,21 @@ namespace VocalKnight.Utils
 
         public static bool SetJson(Stream jsonStream)
         {
-            if (json == null)
+            if (jsonStream == null)
             {
                 Logger.LogError("Json credentials read as null");
                 return false;
             }
 
+            GetCredentials(jsonStream);
             json = jsonStream;
             return true;
         }
 
-        public static async Task GetCredentials()
+        public static async Task GetCredentials(Stream j)
         {
             UserCredential credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
-                                              GoogleClientSecrets.FromStream(json).Secrets,
+                                              GoogleClientSecrets.FromStream(j).Secrets,
                                               new[] { DocsService.Scope.Documents },
                                               "user", CancellationToken.None);
 
@@ -42,7 +43,7 @@ namespace VocalKnight.Utils
             });
         }
 
-        public static bool checkStatus()
+        public static bool connectedStatus()
         {
             return service != null;
         }
