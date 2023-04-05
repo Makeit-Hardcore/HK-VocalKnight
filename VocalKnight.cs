@@ -2,6 +2,7 @@
 using System;
 using UnityEngine;
 using UObject = UnityEngine.Object;
+using System.Collections;
 using System.Collections.Specialized;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,6 +33,7 @@ namespace VocalKnight
         public static AssetBundle EmotesBundle;
         public static AssetBundle HueShiftBundle;
         public static Dictionary<string, AudioClip> customAudio = new Dictionary<string, AudioClip>();
+        private MonoBehaviour _coroutineRunner;
         private Menu MenuRef, ToggleMenuRef;
         public static GSets GS { get; set; } = new GSets();
 
@@ -138,6 +140,7 @@ namespace VocalKnight
                             MenuRef.Find("GenRand").Hide();
                             generated = true;
                             MenuRef.Find("GenText").Show();
+                            _coroutineRunner.StartCoroutine(TimedMenuText(MenuRef.Find("GenText"),MenuRef.Find("GenRand")));
                         },
                         Id: "GenRand")
                     {
@@ -151,17 +154,29 @@ namespace VocalKnight
                     },
                     new MenuButton(
                         "Create Google Doc Index",
-                        "Connects to your Google account to create a keyword index",
+                        "",
                         (Mbutton) =>
                         {
-                            KeyIndexerUtil.WriteToFile();
-                        }),
+                            if (!KeyIndexerUtil.WriteToFile())
+                            {
+                                MenuRef.Find("CreateIndex").Hide();
+                                MenuRef.Find("LinkReminder").Show();
+                                _coroutineRunner.StartCoroutine(TimedMenuText(MenuRef.Find("LinkReminder"), MenuRef.Find("CreateIndex")));
+                            }
+                        },
+                        Id: "CreateIndex"),
+                    new TextPanel(
+                        "Google account must be linked",
+                        Id: "LinkReminder")
+                    {
+                        isVisible = false,
+                    },
                     new MenuButton(
                         "Link Google Account",
                         "",
                         (Mbutton) =>
                         {
-                            //KeyIndexerUtil.GetCredentials().Wait();
+                            KeyIndexerUtil.GetCredentials().Wait(1);
                         })
                 });
             }
@@ -300,6 +315,10 @@ namespace VocalKnight
 
                 KeywordUtil.UpdateKeywords_All();
 
+                var go = new GameObject();
+                UObject.DontDestroyOnLoad(go);
+                _coroutineRunner = go.AddComponent<NonBouncer>();
+
                 ConfigureCooldowns();
                 LoadAssets();
                 HueShifter.LoadAssets();
@@ -405,7 +424,7 @@ namespace VocalKnight
                         }
                         else if (key == "json")
                         {
-                            KeyIndexerUtil.SetJson(manifestResourceStream);
+                            KeyIndexerUtil.GetSecrets(manifestResourceStream);
                         }
                         Logger.Log("Loaded new resource: " + text);
                     }
@@ -434,6 +453,16 @@ namespace VocalKnight
         {
             orig.Invoke(self);
             self.gameObject.AddComponent<Emoter>();
+        }
+
+        private IEnumerator TimedMenuText(Element text, Element button)
+        {
+            for (float timer = 3f; timer > 0; timer -= Time.deltaTime)
+            {
+                yield return null;
+            }
+            text.Hide();
+            button.Show();
         }
 
         public void Unload()

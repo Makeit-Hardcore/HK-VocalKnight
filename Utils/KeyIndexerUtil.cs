@@ -8,15 +8,17 @@ using Google.Apis.Auth.OAuth2;
 using Google.Apis.Docs.v1;
 using Google.Apis.Docs.v1.Data;
 using Google.Apis.Services;
+using Google.Apis.Auth.OAuth2.Responses;
 
 namespace VocalKnight.Utils
 {
     internal static class KeyIndexerUtil
     {
         private static DocsService service;
-        private static Stream json;
+        private static ClientSecrets secrets;
+        private static UserCredential credential;
 
-        public static bool SetJson(Stream jsonStream)
+        public static bool GetSecrets(Stream jsonStream)
         {
             if (jsonStream == null)
             {
@@ -24,23 +26,36 @@ namespace VocalKnight.Utils
                 return false;
             }
 
-            GetCredentials(jsonStream);
-            json = jsonStream;
+            secrets = GoogleClientSecrets.FromStream(jsonStream).Secrets;
             return true;
         }
 
-        public static async Task GetCredentials(Stream j)
+        public static async Task GetCredentials()
         {
-            UserCredential credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
-                                              GoogleClientSecrets.FromStream(j).Secrets,
+            Logger.Log("Creating credential");
+            if (credential == null)
+            {
+                credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
+                                              secrets,
                                               new[] { DocsService.Scope.Documents },
                                               "user", CancellationToken.None);
+            } else
+            {
+                await GoogleWebAuthorizationBroker.ReauthorizeAsync(
+                              credential,
+                              CancellationToken.None);
+            }
+            
+
+            Logger.Log("credential created");
 
             service = new DocsService(new BaseClientService.Initializer()
             {
                 HttpClientInitializer = credential,
                 ApplicationName = "VocalKnight",
             });
+
+            Logger.Log("Docs service created");
         }
 
         public static bool connectedStatus()
@@ -48,7 +63,7 @@ namespace VocalKnight.Utils
             return service != null;
         }
 
-        public static void WriteToFile()
+        public static bool WriteToFile()
         {
             Document kwDoc = new Document();
             string[] commands = KeywordUtil.GetCommands(2);
@@ -93,8 +108,17 @@ namespace VocalKnight.Utils
             BatchUpdateDocumentRequest body = new BatchUpdateDocumentRequest();
             body.Requests = requests;
             BatchUpdateDocumentResponse response = new BatchUpdateDocumentResponse();
-            kwDoc = service.Documents.Create(kwDoc).Execute();
+            try
+            {
+                kwDoc = service.Documents.Create(kwDoc).Execute();
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+            
             service.Documents.BatchUpdate(body, kwDoc.DocumentId).Execute();
+            return true;
         }
 
         private static void CreateTextRQ(ref List<Request> requests, string text, int loc)
