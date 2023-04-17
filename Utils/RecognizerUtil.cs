@@ -311,12 +311,19 @@ namespace VocalKnight.Utils
 
                 //TODO: Add visual feedback for the player for errors listed
                 case DictationCompletionCause.UnknownError:
+                    Logger.LogError("Unknown error killed Dictation Recognizer");
+                    break;
                 case DictationCompletionCause.AudioQualityFailure:
+                    Logger.LogError("Audio quality error killed Dictation Recognizer");
+                    break;
                 case DictationCompletionCause.MicrophoneUnavailable:
+                    Logger.LogError("Microphone unavailable error killed Dictation Recognizer");
+                    break;
                 case DictationCompletionCause.NetworkFailure:
+                    Logger.LogError("Network error killed Dictation Recognizer");
+                    break;
                 default:
                     Logger.LogError("Error killed Dictation Recognizer");
-                    Logger.Log("Attempting to restart recognizer...");
                     break;
             }
             KillRecognizer();
@@ -350,17 +357,25 @@ namespace VocalKnight.Utils
             }
             Logger.LogWarn("Rec timer ran up! Forcefully restarting");
 
+            yield return ForceReset();
+
+            //Recursively restart this coroutine
+            timer = timerMax;
+            yield return FreezeTimer();
+        }
+
+        public IEnumerator ForceReset()
+        {
             //Force a threaded Destruct of the recognizer with the GC, since Dispose() will cause freezing/crash
             ForceDestroy();
             yield return null;
 
             //Allow the recognizer to restart normally
             NewRecognizer();
-
-            //Recursively restart this coroutine
-            timer = timerMax;
-            yield return FreezeTimer();
         }
     }
+
+
+
 }
 

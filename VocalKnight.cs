@@ -7,8 +7,6 @@ using System.Collections.Specialized;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Reflection;
 using Satchel.BetterMenus;
 using VocalKnight.Commands;
@@ -18,13 +16,13 @@ using VocalKnight.Extensions;
 using VocalKnight.Precondition;
 using VocalKnight.Utils;
 using VocalKnight.Settings;
-using Unity.Collections.LowLevel.Unsafe;
 
 namespace VocalKnight
 {
     public class VocalKnight : Mod, IGlobalSettings<GSets>, ICustomMenuMod, ITogglableMod
     {
         public RecognizerUtil recognizer;
+        public WhisperUtil recognizerW;
         public GameObject dictText;
         private GameObject kp;
         private static bool preloadFlag = false;
@@ -33,7 +31,7 @@ namespace VocalKnight
         public static AssetBundle EmotesBundle;
         public static AssetBundle HueShiftBundle;
         public static Dictionary<string, AudioClip> customAudio = new Dictionary<string, AudioClip>();
-        private MonoBehaviour _coroutineRunner;
+        public MonoBehaviour _coroutineRunner;
         private Menu MenuRef, ToggleMenuRef;
         public static GSets GS { get; set; } = new GSets();
 
@@ -132,8 +130,6 @@ namespace VocalKnight
                         "Selects 4 random keywords for each effect & creates Google Doc index",
                         (Mbutton) =>
                         {
-                            //Hide this button, don't let it show again until the menu is closed and reopened
-                            //Instead show text that doesn't go away until you open the menu again
                             KeywordUtil.RandomizeKeywords();
                             KeywordUtil.UpdateKeywords_All();
                             KeyIndexerUtil.WriteToFile();
@@ -147,7 +143,7 @@ namespace VocalKnight
                         isVisible = Convert.ToBoolean(GS.kwSet),
                     },
                     new TextPanel(
-                        "Randomized keyword set generated", //Possible to add check if actually successful?
+                        "Randomized keyword set generated",
                         Id: "GenText")
                     {
                         isVisible = false,
@@ -244,32 +240,6 @@ namespace VocalKnight
                     ));
                 }
             }
-            /*
-            if (GS.kwSet == 1 && !generated)
-            {
-                if (GS.customKws == null)
-                {
-                    MenuRef.AddConfirmDialog(
-                        "No Randomized Keyword Set Found",
-                        "You have selected Randomized keyword set, but none exists in memory. Please generate a new keyword set using the \"GENERATE RANDOMIZED KEYWORD SET\" button.",
-                        new string[] { "OK" },
-                        (selection) =>
-                        {
-                            Satchel.BetterMenus.Utils.GoToMenuScreen(MenuRef.menuScreen);
-                        });
-                } else
-                {
-                    MenuRef.AddConfirmDialog(
-                        "Old Keyword Set Detected",
-                        "You have selected Randomized keyword set, but not generated a new one this session. Would you like to use the previous keyword set?",
-                        new string[] { "YES, LET ME PLAY", "NO, I WANT TO GO BACK" },
-                        (selection) =>
-                        {
-                            if (selection == "NO, I WANT TO GO BACK")
-                                Satchel.BetterMenus.Utils.GoToMenuScreen(MenuRef.menuScreen);
-                        });
-                }
-            }*/
 
             return MenuRef.GetMenuScreen(modListMenu);
         }
@@ -324,6 +294,8 @@ namespace VocalKnight
                 HueShifter.LoadAssets();
 
                 preloadFlag = true;
+
+                recognizerW = new WhisperUtil();
             }
 
             //Initialize captions GameObject
@@ -339,9 +311,9 @@ namespace VocalKnight
 
             ModHooks.AfterPlayerDeadHook += CancelEffects;
             On.HeroController.Awake += OnHeroControllerAwake;
-            RecognizerUtil.foundCommands.CollectionChanged += ExecuteCommands;
+            //RecognizerUtil.foundCommands.CollectionChanged += ExecuteCommands;
 
-            recognizer = new RecognizerUtil();
+            //recognizer = new RecognizerUtil();
 
             kp = new GameObject();
             kp.name = "KeyPressDetector";
@@ -414,6 +386,7 @@ namespace VocalKnight
                     bool flag = manifestResourceStream != null;
                     if (flag)
                     {
+                        Logger.Log(text);
                         string key = Path.GetExtension(text).Substring(1);
                         if (key.Contains("emotes"))
                             _emoteBundles[key] = AssetBundle.LoadFromStream(manifestResourceStream);
@@ -425,6 +398,10 @@ namespace VocalKnight
                         else if (key == "json")
                         {
                             KeyIndexerUtil.GetSecrets(manifestResourceStream);
+                        }
+                        else if (key == "bin")
+                        {
+                            //recognizerW = new WhisperUtil(manifestResourceStream);
                         }
                         Logger.Log("Loaded new resource: " + text);
                     }
@@ -457,12 +434,17 @@ namespace VocalKnight
 
         private IEnumerator TimedMenuText(Element text, Element button)
         {
-            for (float timer = 3f; timer > 0; timer -= Time.deltaTime)
+            yield return WaitFor(3f);
+            text.Hide();
+            button.Show();
+        }
+
+        public IEnumerator WaitFor(float waittime)
+        {
+            for (float timer = waittime; timer > 0; timer -= Time.deltaTime)
             {
                 yield return null;
             }
-            text.Hide();
-            button.Show();
         }
 
         public void Unload()
@@ -477,14 +459,14 @@ namespace VocalKnight
                 UObject.Destroy(emoter);
             }
 
-            recognizer.ForceDestroy();
-            recognizer.runner.StopAllCoroutines();
-            recognizer = null;
+            //recognizer.ForceDestroy();
+            //recognizer.runner.StopAllCoroutines();
+            //recognizer = null;
             GC.Collect();
 
             ModHooks.AfterPlayerDeadHook -= CancelEffects;
             On.HeroController.Awake -= OnHeroControllerAwake;
-            RecognizerUtil.foundCommands.CollectionChanged -= ExecuteCommands;
+            //RecognizerUtil.foundCommands.CollectionChanged -= ExecuteCommands;
         }
 
         public void OnLoadGlobal(GSets s)
@@ -498,14 +480,22 @@ namespace VocalKnight
 
     public class KeyPress : MonoBehaviour
     {
+        public bool holdit = false;
+
         public void Update()
         {
-            if (Input.GetKeyUp(KeyCode.R))
+            if (Input.GetKeyUp(KeyCode.L))
             {
-                Logger.Log("HeroController acceptingInput: " + HeroController.instance.CanInput());
-                VocalKnight.Instance.recognizer.ForceDestroy();
-                VocalKnight.Instance.recognizer.NewRecognizer();
+                //VocalKnight.Instance.recognizer.runner.StartCoroutine(VocalKnight.Instance.recognizer.ForceReset());
+                VocalKnight.Instance._coroutineRunner.StartCoroutine(HoldKeyPress());
             }
+        }
+
+        private IEnumerator HoldKeyPress()
+        {
+            holdit = true;
+            yield return VocalKnight.Instance.WaitFor(2f);
+            holdit = false;
         }
     }
 }
