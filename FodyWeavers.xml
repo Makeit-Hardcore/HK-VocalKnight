@@ -3,8 +3,8 @@
   <Costura>
     <IncludeAssemblies>
 			Google.Apis*
-			Whisper.net
-			Forge*
+			<!--Whisper.net-->
+			<!--Forge*-->
 		</IncludeAssemblies>
 	<CreateTemporaryAssemblies>
 		true

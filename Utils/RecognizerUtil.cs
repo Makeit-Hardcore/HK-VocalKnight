@@ -60,6 +60,7 @@ namespace VocalKnight.Utils
 
             if (dictRecognizer.Status == SpeechSystemStatus.Running)
                 KillRecognizer();
+            SetTextVars();
             dictRecognizer.Start();
         }
 
@@ -81,6 +82,7 @@ namespace VocalKnight.Utils
         }
 
         private const int confirmBuffer = 4;
+        private string hypFirstWord;
         private int searchIndex;
         private string line;
         private List<string> choppedLine = new List<string>();
@@ -88,6 +90,7 @@ namespace VocalKnight.Utils
 
         private void SetTextVars()
         {
+            hypFirstWord = "";
             searchIndex = 0;
             line = " ";
             choppedLine.Clear();
@@ -104,6 +107,16 @@ namespace VocalKnight.Utils
 
             int countNewWords = 0;
             string[] splitText = text.Split(' ');
+            
+            if (splitText.Length > confirmBuffer)
+            {
+                hypFirstWord = splitText[0];
+            }
+            if (hypFirstWord != "" && splitText[0] != hypFirstWord)
+            {
+                SetTextVars();
+            }
+            
             if (inputBuffer.Count() == confirmBuffer - 1)
             {
                 while (searchIndex < inputBuffer.First().Count())

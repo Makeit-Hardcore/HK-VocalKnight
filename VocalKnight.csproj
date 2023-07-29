@@ -346,6 +346,7 @@
 		<EmbeddedResource Include="AudioFiles/*" />
 		<EmbeddedResource Include="Models/*" />
 		<EmbeddedResource Include="Resources/**/*" />
+		<Compile Remove="Utils\WhisperUtil.cs" />
 		<EmbeddedResource Include="credentials.json" />
 	</ItemGroup>
 
@@ -354,16 +355,16 @@
 	    <PrivateAssets>all</PrivateAssets>
 	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 	  </PackageReference>
-	  <PackageReference Include="Fody" Version="6.6.4">
+	  <PackageReference Include="Fody" Version="6.8.0">
 	    <PrivateAssets>all</PrivateAssets>
 	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 	  </PackageReference>
-	  <PackageReference Include="Forge.OpenAI" Version="1.1.2" />
-	  <PackageReference Include="Google.Apis.Auth" Version="1.60.0" />
-	  <PackageReference Include="Google.Apis.Core" Version="1.60.0" />
-	  <PackageReference Include="Google.Apis.Docs.v1" Version="1.60.0.2979" />
+	  <!--<PackageReference Include="Forge.OpenAI" Version="1.1.5" />-->
+	  <PackageReference Include="Google.Apis.Auth" Version="1.61.0" />
+	  <PackageReference Include="Google.Apis.Core" Version="1.61.0" />
+	  <PackageReference Include="Google.Apis.Docs.v1" Version="1.61.0.2979" />
 	  <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-	  <PackageReference Include="Whisper.net" Version="1.2.2" />
+	  <!--<PackageReference Include="Whisper.net" Version="1.4.6" />-->
 	</ItemGroup>
 	
 </Project>

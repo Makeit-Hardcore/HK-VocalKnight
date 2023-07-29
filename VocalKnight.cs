@@ -22,7 +22,7 @@ namespace VocalKnight
     public class VocalKnight : Mod, IGlobalSettings<GSets>, ICustomMenuMod, ITogglableMod
     {
         public RecognizerUtil recognizer;
-        public WhisperUtil recognizerW;
+        //public WhisperUtil recognizerW;
         public GameObject dictText;
         private GameObject kp;
         private static bool preloadFlag = false;
@@ -258,7 +258,7 @@ namespace VocalKnight
             }
         }
 
-        public override string GetVersion() => "0.9.1";
+        public override string GetVersion() => "1.9.5";
 
         public VocalKnight() : base()
         {
@@ -295,7 +295,7 @@ namespace VocalKnight
 
                 preloadFlag = true;
 
-                recognizerW = new WhisperUtil();
+                //recognizerW = new WhisperUtil();
             }
 
             //Initialize captions GameObject
@@ -311,9 +311,9 @@ namespace VocalKnight
 
             ModHooks.AfterPlayerDeadHook += CancelEffects;
             On.HeroController.Awake += OnHeroControllerAwake;
-            //RecognizerUtil.foundCommands.CollectionChanged += ExecuteCommands;
+            RecognizerUtil.foundCommands.CollectionChanged += ExecuteCommands;
 
-            //recognizer = new RecognizerUtil();
+            recognizer = new RecognizerUtil();
 
             kp = new GameObject();
             kp.name = "KeyPressDetector";
@@ -459,14 +459,14 @@ namespace VocalKnight
                 UObject.Destroy(emoter);
             }
 
-            //recognizer.ForceDestroy();
-            //recognizer.runner.StopAllCoroutines();
-            //recognizer = null;
+            recognizer.ForceDestroy();
+            recognizer.runner.StopAllCoroutines();
+            recognizer = null;
             GC.Collect();
 
             ModHooks.AfterPlayerDeadHook -= CancelEffects;
             On.HeroController.Awake -= OnHeroControllerAwake;
-            //RecognizerUtil.foundCommands.CollectionChanged -= ExecuteCommands;
+            RecognizerUtil.foundCommands.CollectionChanged -= ExecuteCommands;
         }
 
         public void OnLoadGlobal(GSets s)
@@ -486,7 +486,7 @@ namespace VocalKnight
         {
             if (Input.GetKeyUp(KeyCode.L))
             {
-                //VocalKnight.Instance.recognizer.runner.StartCoroutine(VocalKnight.Instance.recognizer.ForceReset());
+                VocalKnight.Instance.recognizer.runner.StartCoroutine(VocalKnight.Instance.recognizer.ForceReset());
                 VocalKnight.Instance._coroutineRunner.StartCoroutine(HoldKeyPress());
             }
         }
